@@ -22,29 +22,34 @@ local Window = Rayfield:CreateWindow({
    KeySystem = false
 })
 
--- [[ ABA TELEPORT - UI EXATA DO SCRIPT TSUO ]]
+-- === ABA TELEPORT (BASEADO NO TSUO OPENSOURCE) ===
 local TeleportTab = Window:CreateTab("Teleport", 4483362458)
 
--- Lógica de Detecção do Tsuo (PlaceId)
-local World1, World2, World3 = false, false, false
-if game.PlaceId == 2753915549 then World1 = true
-elseif game.PlaceId == 4442272183 or game.PlaceId == 4442245441 then World2 = true
-elseif game.PlaceId == 7449423635 then World3 = true end
+-- 1. DETECÇÃO DE MUNDO (Lógica Tsuo)
+-- Isso roda ANTES de criar os botões para garantir que carregue o Sea certo
+local PlaceID = game.PlaceId
+local CurrentSea = "Sea 1" -- Padrão
 
--- Define o Sea inicial para o dropdown não bugar
-local Default_Sea = "Sea 1"
-if World2 then Default_Sea = "Sea 2" elseif World3 then Default_Sea = "Sea 3" end
+if PlaceID == 2753915549 then
+    CurrentSea = "Sea 1"
+elseif PlaceID == 4442272183 or PlaceID == 4442245441 then
+    CurrentSea = "Sea 2"
+elseif PlaceID == 7449423635 then
+    CurrentSea = "Sea 3"
+end
 
-local Select_World_Sea = Default_Sea
+-- Variáveis para guardar a escolha do usuário
+local Select_World_Sea = CurrentSea
 local Select_Island_Travelling = ""
 
--- Tabela de ilhas (Mantendo suas coordenadas de 2026)
-local Island_Table = {
+-- Tabela Simples para o Dropdown puxar os nomes (Igual ao Teleport.lua)
+local IslandNames = {
     ["Sea 1"] = {"Starter Island", "Jungle", "Desert", "Middle Town", "Prison", "Magma Village", "Fountain City"},
     ["Sea 2"] = {"Kingdom of Rose", "Green Zone", "Graveyard", "Snow Mountain", "Cursed Ship", "Ice Castle", "Forgotten Island"},
     ["Sea 3"] = {"Port Town", "Hydra Island", "Floating Turtle", "Castle on the Sea", "Haunted Castle", "Tiki Outpost", "Submerged Island", "Prehistoric Island", "Christmas Island"}
 }
 
+-- SEÇÃO 1: MUNDOS
 TeleportTab:CreateSection("Travel - Worlds")
 
 TeleportTab:CreateButton({
@@ -68,68 +73,71 @@ TeleportTab:CreateButton({
     end,
 })
 
+-- SEÇÃO 2: ILHAS
 TeleportTab:CreateSection("Travel - Island")
 
--- Dropdown de Mundo (Select World (Sea))
+-- Dropdown de Mundos
 TeleportTab:CreateDropdown({
     Name = "Select World (Sea)",
     Options = {"Sea 1", "Sea 2", "Sea 3"},
-    CurrentOption = {Default_Sea},
-    Flag = "Select_World_Sea",
+    CurrentOption = {CurrentSea}, -- Começa marcado no Sea que você está!
+    Flag = "WorldSelect",
     Callback = function(Option)
         Select_World_Sea = Option[1]
-        -- Atualiza as ilhas do próximo dropdown (Lógica de refresh do Rayfield)
-        Rayfield.Flags["Select_Island_Travelling"]:Set(Island_Table[Select_World_Sea])
+        -- ATUALIZAÇÃO DINÂMICA: Muda a lista de baixo assim que você troca o Sea
+        Rayfield.Flags["IslandSelect"]:Set(IslandNames[Select_World_Sea])
     end,
 })
 
--- Dropdown de Ilhas (Select Travelling)
+-- Dropdown de Ilhas
 TeleportTab:CreateDropdown({
     Name = "Select Travelling",
-    Options = Island_Table[Default_Sea],
+    Options = IslandNames[CurrentSea], -- Carrega APENAS as ilhas do Sea atual
     CurrentOption = {""},
-    Flag = "Select_Island_Travelling",
+    Flag = "IslandSelect",
     Callback = function(Option)
         Select_Island_Travelling = Option[1]
     end,
 })
 
--- Toggle Iniciar Viagem (Auto Travel)
+-- Toggle de Viagem
 TeleportTab:CreateToggle({
     Name = "Auto Travel",
     CurrentValue = false,
-    Flag = "Start_Journey",
+    Flag = "StartTravel",
     Callback = function(Value)
         _G.Teleporting = Value
         
         if Value then
-            if Select_Island_Travelling ~= "" then
-                -- Busca a CFrame no seu Teleport.lua
+            -- Verifica se selecionou ilha
+            if Select_Island_Travelling ~= "" and Select_Island_Travelling ~= nil then
+                -- Busca a CFrame no modulo Teleport.lua
                 local target = TeleportModule.Islands[Select_World_Sea][Select_Island_Travelling]
+                
                 if target then
                     local tween = TeleportModule.ToPos(target, true)
                     
-                    -- Se chegar, desliga o botão (Lógica OpenSource do Tsuo)
+                    -- Se o tween completar, desliga o botão sozinho
                     if tween then
                         tween.Completed:Connect(function()
                             if _G.Teleporting then
                                 _G.Teleporting = false
-                                Rayfield.Flags["Start_Journey"]:Set(false)
+                                Rayfield.Flags["StartTravel"]:Set(false)
+                                Rayfield:Notify({Title = "Travel", Content = "Arrived!", Duration = 3})
                             end
                         end)
                     end
                 end
             else
-                Rayfield:Notify({Title = "Warning", Content = "Please Select Island", Duration = 3})
-                Rayfield.Flags["Start_Journey"]:Set(false)
+                Rayfield:Notify({Title = "Warning", Content = "Select Island First!", Duration = 3})
+                Rayfield.Flags["StartTravel"]:Set(false)
             end
         else
-            -- Para o voo
+            -- Para o voo imediatamente
             TeleportModule.ToPos(nil, false)
         end
     end,
 })
-
 
 
 -- === ABA DE VISUALS ===
