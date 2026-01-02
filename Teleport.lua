@@ -1,7 +1,9 @@
 -- [[ PASTA: Teleport.lua - MATHEUS HUB v2026 ]]
 local TeleportModule = {}
+local currentTween = nil -- Variável para controlar o voo atual
 
 TeleportModule.Islands = {
+    -- (Suas coordenadas estão perfeitas, mantenha-as aqui...)
     ["Sea 1"] = {
         ["Starter Island"] = CFrame.new(-1103, 15, 3838),
         ["Jungle"] = CFrame.new(-1255, 10, 310),
@@ -33,30 +35,47 @@ TeleportModule.Islands = {
     }
 }
 
--- Função de Teleporte Profissional com Noclip
-function TeleportModule.ToPos(targetCFrame)
+-- FUNÇÃO ATUALIZADA (ESTILO OPENSOURCE)
+function TeleportModule.ToPos(targetCFrame, state)
     local player = game.Players.LocalPlayer
     local char = player.Character
-    if char and char:FindFirstChild("HumanoidRootPart") then
-        local root = char.HumanoidRootPart
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    local root = char.HumanoidRootPart
+
+    -- SE O TOGGLE FOR DESLIGADO NO MENU
+    if state == false then
+        if currentTween then
+            currentTween:Cancel() -- CANCELA O VOO NA HORA
+            currentTween = nil
+        end
+        return
+    end
+
+    -- SE O TOGGLE FOR LIGADO
+    if targetCFrame then
         local dist = (targetCFrame.Position - root.Position).Magnitude
-        local speed = 350 -- Velocidade segura
+        local speed = 350 
         
-        -- Noclip Ativo durante o voo
+        -- Cria o voo
+        currentTween = game:GetService("TweenService"):Create(root, TweenInfo.new(dist/speed, Enum.EasingStyle.Linear), {CFrame = targetCFrame})
+        
+        -- Noclip ativo apenas enquanto estiver voando
         local noclip = game:GetService("RunService").Stepped:Connect(function()
+            if not currentTween then return end
             for _, v in pairs(char:GetDescendants()) do
                 if v:IsA("BasePart") then v.CanCollide = false end
             end
         end)
 
-        local tween = game:GetService("TweenService"):Create(root, TweenInfo.new(dist/speed, Enum.EasingStyle.Linear), {CFrame = targetCFrame})
-        tween:Play()
+        currentTween:Play()
         
-        tween.Completed:Connect(function()
+        currentTween.Completed:Connect(function()
             noclip:Disconnect()
-            -- Pequeno ajuste para não cair no void
+            currentTween = nil
             root.Velocity = Vector3.new(0,0,0)
         end)
+
+        return currentTween -- Retorna o voo para o Main.lua saber quando acabou
     end
 end
 
