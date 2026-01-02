@@ -1,9 +1,7 @@
--- [[ PASTA: Teleport.lua - MATHEUS HUB v2026 ]]
 local TeleportModule = {}
-local currentTween = nil -- Variável para controlar o voo atual
 
+-- [[ COORDENADAS DO MATHEUS HUB ]]
 TeleportModule.Islands = {
-    -- (Suas coordenadas estão perfeitas, mantenha-as aqui...)
     ["Sea 1"] = {
         ["Starter Island"] = CFrame.new(-1103, 15, 3838),
         ["Jungle"] = CFrame.new(-1255, 10, 310),
@@ -35,48 +33,58 @@ TeleportModule.Islands = {
     }
 }
 
--- FUNÇÃO ATUALIZADA (ESTILO OPENSOURCE)
+-- [[ FUNÇÃO DE VOO TSUO STYLE ]]
 function TeleportModule.ToPos(targetCFrame, state)
     local player = game.Players.LocalPlayer
     local char = player.Character
     if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    
     local root = char.HumanoidRootPart
 
-    -- SE O TOGGLE FOR DESLIGADO NO MENU
+    -- Se state for false, CANCELA TUDO
     if state == false then
-        if currentTween then
-            currentTween:Cancel() -- CANCELA O VOO NA HORA
-            currentTween = nil
+        if _G.Tweening then 
+            _G.Tweening:Cancel() 
+            _G.Tweening = nil
         end
+        -- Remove BodyVelocity se existir (para o boneco não cair girando)
+        if root:FindFirstChild("BodyVelocity") then
+            root.BodyVelocity:Destroy()
+        end
+        _G.Teleporting = false
         return
     end
 
-    -- SE O TOGGLE FOR LIGADO
-    if targetCFrame then
-        local dist = (targetCFrame.Position - root.Position).Magnitude
-        local speed = 350 
-        
-        -- Cria o voo
-        currentTween = game:GetService("TweenService"):Create(root, TweenInfo.new(dist/speed, Enum.EasingStyle.Linear), {CFrame = targetCFrame})
-        
-        -- Noclip ativo apenas enquanto estiver voando
-        local noclip = game:GetService("RunService").Stepped:Connect(function()
-            if not currentTween then return end
-            for _, v in pairs(char:GetDescendants()) do
-                if v:IsA("BasePart") then v.CanCollide = false end
+    -- Inicia o Voo
+    local dist = (targetCFrame.Position - root.Position).Magnitude
+    local speed = 350 -- Velocidade ajustada
+    
+    -- Usa BodyVelocity para sustentar o voo (melhor que só Tween)
+    local bv = Instance.new("BodyVelocity")
+    bv.Velocity = Vector3.new(0, 0, 0)
+    bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+    bv.Parent = root
+    
+    local tweenInfo = TweenInfo.new(dist / speed, Enum.EasingStyle.Linear)
+    _G.Tweening = game:GetService("TweenService"):Create(root, tweenInfo, {CFrame = targetCFrame})
+    
+    _G.Tweening:Play()
+
+    -- Loop de Noclip para não bater em paredes
+    spawn(function()
+        while _G.Teleporting and _G.Tweening do
+            if char then
+                for _, v in pairs(char:GetDescendants()) do
+                    if v:IsA("BasePart") then v.CanCollide = false end
+                end
             end
-        end)
-
-        currentTween:Play()
-        
-        currentTween.Completed:Connect(function()
-            noclip:Disconnect()
-            currentTween = nil
-            root.Velocity = Vector3.new(0,0,0)
-        end)
-
-        return currentTween -- Retorna o voo para o Main.lua saber quando acabou
-    end
+            task.wait()
+        end
+        if root:FindFirstChild("BodyVelocity") then root.BodyVelocity:Destroy() end
+    end)
+    
+    return _G.Tweening
 end
 
 return TeleportModule
+
