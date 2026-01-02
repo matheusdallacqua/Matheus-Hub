@@ -22,74 +22,117 @@ local Window = Rayfield:CreateWindow({
    KeySystem = false
 })
 
--- === ABA DE TELEPORTES (ATUALIZADA) ===
+-- === ABA DE TELEPORTES (OPENSOURCE STYLE) ===
 local TeleportTab = Window:CreateTab("Teleports", 4483362458)
-TeleportTab:CreateSection("Seletor de Destino")
 
-local selectedSea = "Sea 1"
-local selectedIsland = ""
+-- Detecção Automática de Sea (Padrão Scripts Profissionais)
+local function GetMySea()
+    local pId = game.PlaceId
+    if pId == 2753915549 then return "Sea 1"
+    elseif pId == 4442245441 then return "Sea 2"
+    elseif pId == 7449423635 then return "Sea 3"
+    else return "Sea 1" end
+end
 
--- Tabela de ilhas para os Dropdowns dinâmicos
-local IslandOptions = {
+local CurrentSea = GetMySea()
+local SelectedIsland = ""
+
+-- Tabela de Opções das Ilhas
+local IslandData = {
     ["Sea 1"] = {"Starter Island", "Jungle", "Desert", "Middle Town", "Prison", "Magma Village", "Fountain City"},
     ["Sea 2"] = {"Kingdom of Rose", "Green Zone", "Graveyard", "Snow Mountain", "Cursed Ship", "Ice Castle", "Forgotten Island"},
     ["Sea 3"] = {"Port Town", "Hydra Island", "Floating Turtle", "Castle on the Sea", "Haunted Castle", "Tiki Outpost", "Submerged Island", "Prehistoric Island", "Christmas Island"}
 }
 
--- Dropdown de Mundo (Sea)
-TeleportTab:CreateDropdown({
-   Name = "Selecionar Mundo (Sea)",
+TeleportTab:CreateSection("Travel - Worlds")
+
+-- Remotes Originais do Blox Fruits para mudar de Sea
+TeleportTab:CreateButton({
+   Name = "Travel East Blue (World 1)",
+   Callback = function()
+      game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelMain")
+   end,
+})
+
+TeleportTab:CreateButton({
+   Name = "Travel Dressrosa (World 2)",
+   Callback = function()
+      game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelDressrosa")
+   end,
+})
+
+TeleportTab:CreateButton({
+   Name = "Travel Zou (World 3)",
+   Callback = function()
+      game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelZou")
+   end,
+})
+
+TeleportTab:CreateSection("Travel - Island")
+
+-- Dropdown de Sea com Autodetecção
+local WorldDrop = TeleportTab:CreateDropdown({
+   Name = "Select World (Sea)",
    Options = {"Sea 1", "Sea 2", "Sea 3"},
-   CurrentOption = {"Sea 1"},
+   CurrentOption = {CurrentSea},
+   Flag = "WorldDrop",
    Callback = function(Option)
-      selectedSea = Option[1]
-      -- Isso aqui faz o segundo dropdown mudar as ilhas na hora
-      Rayfield.Flags["IslandDropdown"]:Set(IslandOptions[selectedSea]) 
-      selectedIsland = "" 
+      CurrentSea = Option[1]
+      -- Atualiza as ilhas do próximo dropdown na hora
+      Rayfield.Flags["IslandDrop"]:Set(IslandData[CurrentSea])
    end,
 })
 
--- Dropdown de Ilha (Dinâmico)
-TeleportTab:CreateDropdown({
-   Name = "Selecionar Ilha",
-   Options = IslandOptions["Sea 1"],
+-- Dropdown de Ilhas
+local IslandDrop = TeleportTab:CreateDropdown({
+   Name = "Select Travelling",
+   Options = IslandData[CurrentSea],
    CurrentOption = {""},
-   Flag = "IslandDropdown", 
+   Flag = "IslandDrop",
    Callback = function(Option)
-      selectedIsland = Option[1]
+      SelectedIsland = Option[1]
    end,
 })
 
+-- Toggle Profissional (Start Journey)
 TeleportTab:CreateToggle({
-   Name = "Iniciar Viagem",
+   Name = "Auto Travel (Start Journey)",
    CurrentValue = false,
-   Flag = "TPIsland",
+   Flag = "AutoTravel",
    Callback = function(Value)
       _G.Teleporting = Value
+      
       if Value then
-         if selectedIsland ~= "" and selectedIsland ~= nil then
-            local target = TeleportModule.Islands[selectedSea][selectedIsland]
-            if target then 
+         if SelectedIsland ~= "" and SelectedIsland ~= nil then
+            local target = TeleportModule.Islands[CurrentSea][SelectedIsland]
+            if target then
+               -- Chama o módulo de TP e aguarda finalização
                local flight = TeleportModule.ToPos(target, true)
+               
                if flight then
                   flight.Completed:Connect(function()
                      if _G.Teleporting then
                         _G.Teleporting = false
-                        Rayfield.Flags["TPIsland"]:Set(false)
+                        Rayfield.Flags["AutoTravel"]:Set(false)
+                        Rayfield:Notify({Title = "Matheus Hub", Content = "Arrived at Destination!", Duration = 3})
                      end
                   end)
                end
             end
          else
-            Rayfield:Notify({Title = "Aviso", Content = "Escolha uma ilha!", Duration = 3})
-            Rayfield.Flags["TPIsland"]:Set(false)
+            Rayfield:Notify({Title = "Error", Content = "Please select an island first!", Duration = 3})
+            Rayfield.Flags["AutoTravel"]:Set(false)
          end
       else
-         -- Para o voo se desligar o toggle
+         -- Cancela o voo imediatamente via Módulo
          TeleportModule.ToPos(nil, false)
       end
    end,
 })
+
+-- Notificação de Sea Detectado ao carregar
+Rayfield:Notify({Title = "System", Content = "Detected: " .. CurrentSea, Duration = 3})
+
 
 -- === ABA DE VISUALS ===
 local VisualTab = Window:CreateTab("Visuals", 4483362458)
