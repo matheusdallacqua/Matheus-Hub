@@ -1,4 +1,4 @@
--- [[ MATHEUS HUB - MAIN COMPLEXO ]]
+-- [[ MATHEUS HUB - MAIN COMPLEXO ATUALIZADO ]]
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 -- === CONFIGURAÇÃO DOS LINKS ===
@@ -22,40 +22,71 @@ local Window = Rayfield:CreateWindow({
    KeySystem = false
 })
 
--- === ABA DE TELEPORTES ===
+-- === ABA DE TELEPORTES (ATUALIZADA) ===
 local TeleportTab = Window:CreateTab("Teleports", 4483362458)
-TeleportTab:CreateSection("Seletor de Mundo")
+TeleportTab:CreateSection("Seletor de Destino")
 
 local selectedSea = "Sea 1"
 local selectedIsland = ""
 
+-- Tabela de ilhas para os Dropdowns dinâmicos
+local IslandOptions = {
+    ["Sea 1"] = {"Starter Island", "Jungle", "Desert", "Middle Town", "Prison", "Magma Village", "Fountain City"},
+    ["Sea 2"] = {"Kingdom of Rose", "Green Zone", "Graveyard", "Snow Mountain", "Cursed Ship", "Ice Castle", "Forgotten Island"},
+    ["Sea 3"] = {"Port Town", "Hydra Island", "Floating Turtle", "Castle on the Sea", "Haunted Castle", "Tiki Outpost", "Submerged Island", "Prehistoric Island", "Christmas Island"}
+}
+
+-- Dropdown de Mundo (Sea)
 TeleportTab:CreateDropdown({
-   Name = "Selecionar Sea",
+   Name = "Selecionar Mundo (Sea)",
    Options = {"Sea 1", "Sea 2", "Sea 3"},
    CurrentOption = {"Sea 1"},
-   Callback = function(Option) selectedSea = Option[1] end,
+   Callback = function(Option)
+      selectedSea = Option[1]
+      -- Isso aqui faz o segundo dropdown mudar as ilhas na hora
+      Rayfield.Flags["IslandDropdown"]:Set(IslandOptions[selectedSea]) 
+      selectedIsland = "" 
+   end,
 })
 
+-- Dropdown de Ilha (Dinâmico)
 TeleportTab:CreateDropdown({
    Name = "Selecionar Ilha",
-   Options = {"Starter Island", "Jungle", "Pirate Village", "Desert", "Frozen Village", "Marineford", "Skypiea", "Prison", "Magma Village", "Cafe", "Kingdom of Rose", "Green Bit", "Graveyard", "Snow Mountain", "Hot and Cold", "Cursed Ship", "Ice Castle", "Forgotten Island", "Castle on the Sea", "Port Town", "Hydra Island", "Great Tree", "Floating Turtle", "Haunted Castle", "Sea of Treats"},
-   Callback = function(Option) selectedIsland = Option[1] end,
+   Options = IslandOptions["Sea 1"],
+   CurrentOption = {""},
+   Flag = "IslandDropdown", 
+   Callback = function(Option)
+      selectedIsland = Option[1]
+   end,
 })
 
 TeleportTab:CreateToggle({
-   Name = "Teleportar para Ilha",
+   Name = "Iniciar Viagem",
    CurrentValue = false,
    Flag = "TPIsland",
    Callback = function(Value)
+      _G.Teleporting = Value
       if Value then
-         if selectedIsland ~= "" then
+         if selectedIsland ~= "" and selectedIsland ~= nil then
             local target = TeleportModule.Islands[selectedSea][selectedIsland]
-            if target then TeleportModule.ToPos(target) end
+            if target then 
+               local flight = TeleportModule.ToPos(target, true)
+               if flight then
+                  flight.Completed:Connect(function()
+                     if _G.Teleporting then
+                        _G.Teleporting = false
+                        Rayfield.Flags["TPIsland"]:Set(false)
+                     end
+                  end)
+               end
+            end
          else
             Rayfield:Notify({Title = "Aviso", Content = "Escolha uma ilha!", Duration = 3})
+            Rayfield.Flags["TPIsland"]:Set(false)
          end
-         task.wait(0.5)
-         Rayfield.Flags["TPIsland"]:Set(false)
+      else
+         -- Para o voo se desligar o toggle
+         TeleportModule.ToPos(nil, false)
       end
    end,
 })
@@ -73,9 +104,8 @@ VisualTab:CreateToggle({
    Callback = function(Value) VisualsModule.FruitESP(Value) end,
 })
 
--- === ABA DE FRUTAS (A QUE VOCÊ QUERIA COMPLEXA) ===
+-- === ABA DE FRUTAS (MANTIDA A SUA COMPLEXA) ===
 local FruitTab = Window:CreateTab("Devil Fruit", 4483362458)
-
 FruitTab:CreateSection("Farm de Frutas")
 
 FruitTab:CreateToggle({
@@ -84,10 +114,7 @@ FruitTab:CreateToggle({
    Flag = "AutoFruit",
    Callback = function(Value)
       if Value then
-         -- Chama a função complexa que criamos no Fruits.lua
          FruitsModule.TeleportToFruit(true)
-         
-         -- Desliga o toggle automaticamente após a execução
          task.wait(1)
          Rayfield.Flags["AutoFruit"]:Set(false)
       end
@@ -103,7 +130,6 @@ FruitTab:CreateToggle({
    Callback = function(Value)
       if Value then
          FruitsModule.BuyGacha(true)
-         
          task.wait(1)
          Rayfield.Flags["GachaToggle"]:Set(false)
       end
