@@ -42,17 +42,30 @@ TeleportTab:CreateDropdown({
    Callback = function(Option) _G.SelectedIsland = Option[1]; _G.SelectedSea = "Sea 3" end,
 })
 
-TeleportTab:CreateButton({
-   Name = "Viajar para Ilha Selecionada",
-   Callback = function()
-      if _G.SelectedSea and _G.SelectedIsland then
-         local target = TeleportModule.Islands[_G.SelectedSea][_G.SelectedIsland]
-         if target then TeleportModule.ToPos(target) end
-      else
-         Rayfield:Notify({Title = "Aviso", Content = "Escolha uma ilha primeiro!", Duration = 3})
+-- === INTERRUPTOR DE TELEPORTE (TOGGLE) ===
+TeleportTab:CreateToggle({
+   Name = "Iniciar Viagem",
+   CurrentValue = false,
+   Flag = "TeleportToggle",
+   Callback = function(Value)
+      if Value then
+         -- Verifica se o usuário escolheu uma ilha
+         if _G.SelectedSea and _G.SelectedIsland then
+            local target = TeleportModule.Islands[_G.SelectedSea][_G.SelectedIsland]
+            if target then 
+               TeleportModule.ToPos(target) 
+            end
+         else
+            Rayfield:Notify({Title = "Erro", Content = "Selecione uma ilha primeiro!", Duration = 3})
+         end
+         
+         -- Faz o interruptor voltar para "Desligado" sozinho após iniciar o movimento
+         task.wait(0.5)
+         Rayfield.Flags["TeleportToggle"]:Set(false)
       end
    end,
 })
+
 
 -- === ABA DE VISUALS (ESP) ===
 local VisualTab = Window:CreateTab("Visuals", 4483362458)
