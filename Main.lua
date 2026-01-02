@@ -4,10 +4,10 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 -- === CONFIGURAÇÃO DE LINKS ===
 -- IMPORTANTE: Vá no seu GitHub, abra o teleport.lua, clique em "Raw" e copie o link.
 -- Cole o link entre as aspas abaixo:
-local URL_TELEPORT = "COLE_AQUI_O_SEU_LINK_RAW_DO_TELEPORT_LUA"
+local URL_TELEPORT = "https://raw.githubusercontent.com/matheusdallacqua/Matheus-Hub/refs/heads/main/Teleport.lua"
 
 -- Carregando sua "pasta" de teleporte do GitHub
-local TeleportModule = loadstring(game:HttpGet(URL_TELEPORT))()
+local TeleportModule = loadstring(game:HttpGet(https://raw.githubusercontent.com/matheusdallacqua/Matheus-Hub/refs/heads/main/Teleport.lua))()
 
 local Window = Rayfield:CreateWindow({
    Name = "Matheus Hub",
