@@ -201,11 +201,25 @@ FruitTab:CreateSection("Gacha & Shop Sniper")
 
 -- Corrigido: Auto random fruit BuyGacha
 FruitTab:CreateToggle({
-    Name = "Girar Fruta (Blox Fruit Gacha)",
-    Callback = function()
-        FruitsModule.BuyGacha()
+    Name = "Auto Gacha (Fica Tentando)",
+    CurrentValue = false,
+    Flag = "AutoGachaLoop",
+    Callback = function(Value)
+        _G.TentandoGacha = Value
+        if Value then
+            task.spawn(function()
+                while _G.TentandoGacha do
+                    -- Tenta girar a fruta
+                    FruitsModule.BuyGacha()
+                    -- Espera 60 segundos antes de tentar de novo
+                    -- Assim não dá lag e pega a fruta no minuto que liberar
+                    task.wait(60) 
+                end
+            end)
+        end
     end,
 })
+
 
 -- Sniper Label (Agora chamando o seu módulo atualizado)
 local StockLabel = FruitTab:CreateLabel("Fetching Stock...")
