@@ -5,16 +5,14 @@ local FruitModule = {}
 local Remote = game:GetService("ReplicatedStorage").Remotes.CommF_
 local Player = game.Players.LocalPlayer
 
--- [[ 1. BLOX FRUIT GACHA (GIRO REAL) ]]
---- [[ 1. O GACHA QUE FUNCIONA (TELEPORT + MULTI-REMOTE) ]]
+-- [[ 1. BLOX FRUIT GACHA (ESTILO W-AZURE / BANANA) ]]
 function FruitModule.BuyGacha()
     local character = Player.Character
     local root = character:FindFirstChild("HumanoidRootPart")
     if not root then return end
     
-    local oldPos = root.CFrame -- Guarda a tua posição para voltar depois
+    local oldPos = root.CFrame
     
-    -- Busca o NPC em qualquer Sea (Selva, Café ou Mansão)
     local gachaNPC = nil
     for _, v in pairs(game:GetService("Workspace").NPCs:GetDescendants()) do
         if v.Name == "Blox Fruit Gacha" or v.Name == "Cousin" then
@@ -24,40 +22,43 @@ function FruitModule.BuyGacha()
     end
 
     if gachaNPC then
-        -- Teleporte instantâneo para o NPC (Bypass de distância)
         root.CFrame = gachaNPC:GetModelCFrame()
-        task.wait(0.3) -- Tempo para o servidor processar a tua chegada
+        task.wait(0.3)
         
-        -- Tenta todos os Remotes conhecidos até hoje
-        local methods = {"BloxFruitGacha", "Cousin"}
-        for _, method in pairs(methods) do
-            pcall(function()
-                Remote:InvokeServer(method, "Roll")
-                Remote:InvokeServer(method, "BuyItem")
-            end)
-        end
+        -- AJUSTE: Sequência correta para simular o clique nos botões (Estilo Redz/W-Azure)
+        pcall(function()
+            Remote:InvokeServer("BloxFruitGacha", "Gacha") -- Simula o "Oi" pro NPC
+            task.wait(0.1)
+            Remote:InvokeServer("BloxFruitGacha", "Roll")  -- Simula o "Girar"
+            Remote:InvokeServer("Cousin", "BuyItem")       -- Fallback Sea 1
+        end)
         
         task.wait(0.2)
-        root.CFrame = oldPos -- Volta-te para onde estavas
+        root.CFrame = oldPos
         
-        -- Auto Store (Tenta guardar 3 vezes para garantir com o teu lag)
+        -- Auto Store reforçado
         task.spawn(function()
             for i = 1, 3 do
                 task.wait(1)
                 for _, item in pairs(Player.Backpack:GetChildren()) do
-                    if item.Name:find("Fruit") or item.Name:find("Fruta") then
+                    if item.Name:find("Fruit") or item:GetAttribute("Fruit") then
+                        Remote:InvokeServer("StoreFruit", item.Name, item)
+                    end
+                end
+                -- Checa a mão também
+                for _, item in pairs(character:GetChildren()) do
+                    if item:IsA("Tool") and (item.Name:find("Fruit") or item:GetAttribute("Fruit")) then
                         Remote:InvokeServer("StoreFruit", item.Name, item)
                     end
                 end
             end
         end)
     else
-        -- Se não encontrar o NPC físico, tenta o Remote direto por segurança
         pcall(function() Remote:InvokeServer("BloxFruitGacha", "Roll") end)
     end
 end
 
--- [[ 2. AUTO COLLECT (MODO TWEEN - ANTI BAN) ]]
+-- [[ 2. AUTO COLLECT ]]
 function FruitModule.AutoCollectFruit(state)
     _G.Auto_Collect_Fruit = state
     task.spawn(function()
@@ -69,7 +70,6 @@ function FruitModule.AutoCollectFruit(state)
                         local handle = v:FindFirstChild("Handle") or v:FindFirstChildWhichIsA("BasePart")
                         if handle then
                             local root = Player.Character.HumanoidRootPart
-                            -- Teleporte Seguro
                             root.CFrame = handle.CFrame
                             task.wait(0.2)
                             firetouchinterest(root, handle, 0)
@@ -82,7 +82,7 @@ function FruitModule.AutoCollectFruit(state)
     end)
 end
 
--- [[ 3. BRING FRUITS (TRAZ AS FRUTAS ATÉ VOCÊ) ]]
+-- [[ 3. BRING FRUITS ]]
 function FruitModule.BringFruits(state)
     _G.BringFruits = state
     task.spawn(function()
@@ -103,31 +103,40 @@ function FruitModule.BringFruits(state)
     end)
 end
 
--- [[ 4. AUTO STORE (SCANNER DE INVENTÁRIO COMPLETO) ]]
+-- [[ 4. AUTO STORE (W-AZURE & BANANA HUB METHOD) ]]
 function FruitModule.AutoStoreFruit(state)
     _G.AutoStore = state
+    if not state then return end
+    
     task.spawn(function()
         while _G.AutoStore do
-            task.wait(1)
-            -- Scan na Backpack (Mochila)
-            for _, item in pairs(Player.Backpack:GetChildren()) do
-                if item.Name:find("Fruit") or item:GetAttribute("Fruit") then
-                    Remote:InvokeServer("StoreFruit", item.Name, item)
-                end
-            end
-            -- Scan no Character (Mão)
-            if Player.Character then
-                for _, item in pairs(Player.Character:GetChildren()) do
-                    if item:IsA("Tool") and (item.Name:find("Fruit") or item:GetAttribute("Fruit")) then
-                        Remote:InvokeServer("StoreFruit", item.Name, item)
+            pcall(function()
+                local character = Player.Character
+                local backpack = Player.Backpack
+                
+                -- Função interna para disparar o store no item correto
+                local function StoreItem(item)
+                    if item:IsA("Tool") and (item.Name:find("Fruit") or item:GetAttribute("Fruit") or item.Name:find("Fruta")) then
+                        -- O segredo do Azure: disparar o Remote passando o nome e o OBJETO
+                        Remote:InvokeServer("StoreFruit", tostring(item.Name), item)
                     end
                 end
-            end
-            -- Se não quiser que o loop rode eterno, pare aqui se o state for falso
-            if not _G.AutoStore then break end
+
+                -- Limpa a Mochila
+                for _, item in pairs(backpack:GetChildren()) do
+                    StoreItem(item)
+                end
+                
+                -- Limpa a Mão (Character)
+                if character then
+                    for _, item in pairs(character:GetChildren()) do
+                        StoreItem(item)
+                    end
+                end
+            end)
+            task.wait(1.5) -- Intervalo seguro para não dar kick por spam
         end
     end)
 end
-
 
 return FruitModule
