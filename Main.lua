@@ -122,7 +122,7 @@ spawn(function()
         end
     end
 end)
-
+})
 
 -- ==========================================
 -- ABA 1: TELEPORT (PROFISSIONAL)
