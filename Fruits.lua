@@ -1,87 +1,51 @@
 -- [[ PASTA: Fruits.lua - MATHEUS HUB COMPLEX EDITION ]]
 local FruitModule = {}
 
--- Configurações Internas
-local Services = {
-    Workspace = game:GetService("Workspace"),
-    Players = game:GetService("Players"),
-    RS = game:GetService("ReplicatedStorage"),
-    Tween = game:GetService("TweenService")
-}
-
-local LocalPlayer = Services.Players.LocalPlayer
-
--- Função Profissional de Teleporte (Tween com Noclip)
-local function SecureMove(targetCFrame)
-    local character = LocalPlayer.Character
-    if not character or not character:FindFirstChild("HumanoidRootPart") then return end
-    
-    local root = character.HumanoidRootPart
-    local distance = (targetCFrame.Position - root.Position).Magnitude
-    local speed = 300 -- Velocidade segura para evitar kick
-    
-    -- Ativa Noclip para não morrer ou bugar em paredes
-    local noclipLoop = game:GetService("RunService").Stepped:Connect(function()
-        for _, v in pairs(character:GetDescendants()) do
-            if v:IsA("BasePart") then v.CanCollide = false end
+-- [[ AUTO COLLECT - SCANNER DO TSUO ]]
+function FruitModule.AutoCollectFruit(state)
+    _G.Auto_Collect_Fruit = state
+    spawn(function()
+        while _G.Auto_Collect_Fruit do
+            task.wait(0.1) 
+            for i, v in pairs(game.Workspace:GetChildren()) do
+                if v:IsA("Tool") and (v.Name:find("Fruit") or v.Name:find("Fruta")) then
+                    local handle = v:FindFirstChild("Handle")
+                    if handle then
+                        local char = game.Players.LocalPlayer.Character
+                        if char and char:FindFirstChild("HumanoidRootPart") then
+                            -- TP e Coleta Instantânea
+                            char.HumanoidRootPart.CFrame = handle.CFrame
+                            firetouchinterest(char.HumanoidRootPart, handle, 0)
+                            firetouchinterest(char.HumanoidRootPart, handle, 1)
+                            task.wait(0.5)
+                        end
+                    end
+                end
+            end
         end
-    end)
-
-    local tween = Services.Tween:Create(root, TweenInfo.new(distance/speed, Enum.EasingStyle.Linear), {CFrame = targetCFrame})
-    tween:Play()
-    
-    tween.Completed:Connect(function()
-        noclipLoop:Disconnect()
-        root.CFrame = root.CFrame * CFrame.new(0, 3, 0) -- Pulo de segurança ao chegar
     end)
 end
 
--- [[ FUNÇÃO: TELEPORT FRUIT ]]
-function FruitModule.TeleportToFruit(state)
-    if not state then return end
-    
-    local fruitFound = nil
-    
-    -- Procura avançada por frutas (suporta nomes em PT e EN)
-    for _, item in pairs(Services.Workspace:GetChildren()) do
-        if item:IsA("Tool") and (item.Name:find("Fruit") or item.Name:find("Fruta")) then
-            fruitFound = item
-            break
+-- [[ AUTO STORE - LOGICA DO TSUO ]]
+function FruitModule.AutoStoreFruit(state)
+    _G.AutoStore = state
+    spawn(function()
+        while _G.AutoStore do
+            task.wait(2)
+            local char = game.Players.LocalPlayer.Character
+            if char then
+                local tool = char:FindFirstChildOfClass("Tool")
+                if tool and string.find(tool.Name, "Fruit") then
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", tool:GetAttribute("FruitName"), tool)
+                end
+            end
         end
-    end
-    
-    if fruitFound and fruitFound:FindFirstChild("Handle") then
-        -- Notificação estilo profissional
-        game:GetService("StarterGui"):SetCore("SendNotification", {
-            Title = "Matheus Hub",
-            Text = "Fruta detetada: " .. fruitFound.Name .. ". Iniciando TP...",
-            Duration = 5
-        })
-        SecureMove(fruitFound.Handle.CFrame)
-    else
-        game:GetService("StarterGui"):SetCore("SendNotification", {
-            Title = "Aviso",
-            Text = "Nenhuma fruta encontrada no chão.",
-            Duration = 5
-        })
-    end
+    end)
 end
 
--- [[ FUNÇÃO: GACHA AUTOMÁTICO ]]
-function FruitModule.BuyGacha(state)
-    if not state then return end
-    
-    -- Tenta comprar a fruta via Remote
-    local result = Services.RS.Remotes.CommF_:InvokeServer("Cousin", "Buy")
-    
-    -- Se o resultado for uma tabela ou string, podemos tratar a resposta aqui
-    if result then
-        game:GetService("StarterGui"):SetCore("SendNotification", {
-            Title = "Gacha Result",
-            Text = "Verifica o teu inventário!",
-            Duration = 5
-        })
-    end
+-- [[ GACHA - REMOTOS DO TSUO ]]
+function FruitModule.BuyGacha()
+    return game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("Cousin", "BuyItem")
 end
 
 return FruitModule
