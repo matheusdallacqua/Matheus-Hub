@@ -5,60 +5,41 @@ local FruitModule = {}
 local Remote = game:GetService("ReplicatedStorage").Remotes.CommF_
 local Player = game.Players.LocalPlayer
 
--- [[ 1. BLOX FRUIT GACHA (ESTILO W-AZURE / BANANA) ]]
+-- [[ 1. BLOX FRUIT GACHA (MÉTODO DIRETO - SEM TELEPORTE) ]]
 function FruitModule.BuyGacha()
-    local character = Player.Character
-    local root = character:FindFirstChild("HumanoidRootPart")
-    if not root then return end
+    -- Dispara o sinal direto pro servidor (Igual Banana/Azure/Redz)
+    pcall(function()
+        -- Sea 2 e 3
+        Remote:InvokeServer("BloxFruitGacha", "Roll")
+    end)
     
-    local oldPos = root.CFrame
-    
-    local gachaNPC = nil
-    for _, v in pairs(game:GetService("Workspace").NPCs:GetDescendants()) do
-        if v.Name == "Blox Fruit Gacha" or v.Name == "Cousin" then
-            gachaNPC = v
-            break
-        end
-    end
+    pcall(function()
+        -- Sea 1 (Cousin)
+        Remote:InvokeServer("Cousin", "BuyItem")
+    end)
 
-    if gachaNPC then
-        root.CFrame = gachaNPC:GetModelCFrame()
-        task.wait(0.3)
+    -- Auto Store (Garante que guarda o que girou)
+    task.spawn(function()
+        task.wait(1.5)
+        local character = Player.Character
+        local backpack = Player.Backpack
         
-        -- AJUSTE: Sequência correta para simular o clique nos botões (Estilo Redz/W-Azure)
-        pcall(function()
-            Remote:InvokeServer("BloxFruitGacha", "Gacha") -- Simula o "Oi" pro NPC
-            task.wait(0.1)
-            Remote:InvokeServer("BloxFruitGacha", "Roll")  -- Simula o "Girar"
-            Remote:InvokeServer("Cousin", "BuyItem")       -- Fallback Sea 1
-        end)
-        
-        task.wait(0.2)
-        root.CFrame = oldPos
-        
-        -- Auto Store reforçado
-        task.spawn(function()
-            for i = 1, 3 do
-                task.wait(1)
-                for _, item in pairs(Player.Backpack:GetChildren()) do
-                    if item.Name:find("Fruit") or item:GetAttribute("Fruit") then
-                        Remote:InvokeServer("StoreFruit", item.Name, item)
-                    end
-                end
-                -- Checa a mão também
-                for _, item in pairs(character:GetChildren()) do
-                    if item:IsA("Tool") and (item.Name:find("Fruit") or item:GetAttribute("Fruit")) then
-                        Remote:InvokeServer("StoreFruit", item.Name, item)
-                    end
+        for _, item in pairs(backpack:GetChildren()) do
+            if item:IsA("Tool") and (item.Name:find("Fruit") or item:GetAttribute("Fruit")) then
+                Remote:InvokeServer("StoreFruit", item.Name, item)
+            end
+        end
+        if character then
+            for _, item in pairs(character:GetChildren()) do
+                if item:IsA("Tool") and (item.Name:find("Fruit") or item:GetAttribute("Fruit")) then
+                    Remote:InvokeServer("StoreFruit", item.Name, item)
                 end
             end
-        end)
-    else
-        pcall(function() Remote:InvokeServer("BloxFruitGacha", "Roll") end)
-    end
+        end
+    end)
 end
 
--- [[ 2. AUTO COLLECT ]]
+-- [[ 2. AUTO COLLECT (MÉTODO TWEEN/TP) ]]
 function FruitModule.AutoCollectFruit(state)
     _G.Auto_Collect_Fruit = state
     task.spawn(function()
@@ -82,7 +63,7 @@ function FruitModule.AutoCollectFruit(state)
     end)
 end
 
--- [[ 3. BRING FRUITS ]]
+-- [[ 3. BRING FRUITS (TRAZER PARA SI) ]]
 function FruitModule.BringFruits(state)
     _G.BringFruits = state
     task.spawn(function()
@@ -103,7 +84,7 @@ function FruitModule.BringFruits(state)
     end)
 end
 
--- [[ 4. AUTO STORE (W-AZURE & BANANA HUB METHOD) ]]
+-- [[ 4. AUTO STORE (MÉTODO DEFINITIVO) ]]
 function FruitModule.AutoStoreFruit(state)
     _G.AutoStore = state
     if not state then return end
@@ -111,30 +92,20 @@ function FruitModule.AutoStoreFruit(state)
     task.spawn(function()
         while _G.AutoStore do
             pcall(function()
-                local character = Player.Character
-                local backpack = Player.Backpack
-                
-                -- Função interna para disparar o store no item correto
-                local function StoreItem(item)
-                    if item:IsA("Tool") and (item.Name:find("Fruit") or item:GetAttribute("Fruit") or item.Name:find("Fruta")) then
-                        -- O segredo do Azure: disparar o Remote passando o nome e o OBJETO
-                        Remote:InvokeServer("StoreFruit", tostring(item.Name), item)
+                for _, item in pairs(Player.Backpack:GetChildren()) do
+                    if item:IsA("Tool") and (item.Name:find("Fruit") or item:GetAttribute("Fruit")) then
+                        Remote:InvokeServer("StoreFruit", item.Name, item)
                     end
                 end
-
-                -- Limpa a Mochila
-                for _, item in pairs(backpack:GetChildren()) do
-                    StoreItem(item)
-                end
-                
-                -- Limpa a Mão (Character)
-                if character then
-                    for _, item in pairs(character:GetChildren()) do
-                        StoreItem(item)
+                if Player.Character then
+                    for _, item in pairs(Player.Character:GetChildren()) do
+                        if item:IsA("Tool") and (item.Name:find("Fruit") or item:GetAttribute("Fruit")) then
+                            Remote:InvokeServer("StoreFruit", item.Name, item)
+                        end
                     end
                 end
             end)
-            task.wait(1.5) -- Intervalo seguro para não dar kick por spam
+            task.wait(2)
         end
     end)
 end
