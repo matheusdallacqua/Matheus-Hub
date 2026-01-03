@@ -16,13 +16,17 @@ function VisualsModule.PlayerESP(state)
                         local lab = Instance.new("TextLabel", bill)
                         lab.Size = UDim2.new(1, 0, 1, 0)
                         lab.BackgroundTransparency = 1
-                        lab.TextColor3 = Color3.fromRGB(255, 50, 50)
+                        lab.TextColor3 = Color3.fromRGB(0, 255, 0) -- ALTERADO PARA VERDE
                         lab.Font = Enum.Font.GothamBold
                         lab.TextSize = 14
+                        lab.TextStrokeTransparency = 0 
                         task.spawn(function()
                             while v.Character and v.Character:FindFirstChild("HumanoidRootPart") and _G.PlayerESP do
-                                local dist = math.floor((game.Players.LocalPlayer.Character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).Magnitude)
-                                lab.Text = v.Name .. " [" .. dist .. "m]"
+                                local root = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                                if root then
+                                    local dist = math.floor((root.Position - v.Character.HumanoidRootPart.Position).Magnitude)
+                                    lab.Text = v.Name .. " [" .. dist .. "m]"
+                                end
                                 task.wait(0.3)
                             end
                             if bill then bill:Destroy() end
@@ -51,9 +55,10 @@ function VisualsModule.FruitESP(state)
                         local lab = Instance.new("TextLabel", bill)
                         lab.Size = UDim2.new(1, 0, 1, 0)
                         lab.BackgroundTransparency = 1
-                        lab.TextColor3 = Color3.fromRGB(50, 255, 50)
+                        lab.TextColor3 = Color3.fromRGB(255, 0, 0) -- ALTERADO PARA VERMELHO
                         lab.Font = Enum.Font.GothamBold
                         lab.TextSize = 14
+                        lab.TextStrokeTransparency = 0 
                         task.spawn(function()
                             while v.Parent == game.Workspace and _G.FruitESP do
                                 local root = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
