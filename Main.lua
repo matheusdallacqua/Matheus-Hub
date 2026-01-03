@@ -204,23 +204,17 @@ FruitTab:CreateToggle({
     end,
 })
 
--- Sniper Label (Mostra a fruta em stock)
+-- Sniper Label (Agora chamando o seu módulo atualizado)
 local StockLabel = FruitTab:CreateLabel("Fetching Stock...")
 
-spawn(function()
+task.spawn(function()
     while task.wait(30) do
-        local stock = game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("GetFruits")
-        local text = "Stock: "
-        if stock then
-            for i, v in pairs(stock) do
-                if v.OnSale then
-                    text = text .. v.Name .. " | "
-                end
-            end
-            StockLabel:Set(text)
-        end
+        -- Em vez de fazer a conta aqui, ele pede para o VisualsModule o texto pronto
+        local currentStock = VisualsModule.GetStock()
+        StockLabel:Set("Stock: " .. currentStock)
     end
 end)
+
 
 -- [[ SISTEMA ANTI-AFK - TSUO STYLE ]]
 local VirtualUser = game:GetService("VirtualUser")
