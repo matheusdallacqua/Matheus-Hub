@@ -1,212 +1,235 @@
--- [[ MATHEUS HUB - MAIN COMPLEXO ATUALIZADO ]]
+-- [[ MATHEUS HUB - ULTRA COMPLEX MAIN VERSION 2026 ]]
+-- Powered by Matheus & OpenSource Community
+
+-- === 1. CARREGAMENTO DA INTERFACE (RAYFIELD) ===
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
--- === CONFIGURAÇÃO DOS LINKS ===
+-- === 2. LINKS DO REPOSITÓRIO GITHUB ===
 local URLS = {
     Teleport = "https://raw.githubusercontent.com/matheusdallacqua/Matheus-Hub/refs/heads/main/Teleport.lua",
     Visual   = "https://raw.githubusercontent.com/matheusdallacqua/Matheus-Hub/refs/heads/main/Visual.lua",
-    Fruits   = "https://raw.githubusercontent.com/matheusdallacqua/Matheus-Hub/refs/heads/main/Fruits.lua"
+    Fruits   = "https://raw.githubusercontent.com/matheusdallacqua/Matheus-Hub/refs/heads/main/Fruits.lua",
+    Farm     = "https://raw.githubusercontent.com/matheusdallacqua/Matheus-Hub/refs/heads/main/Farm.lua" -- Futuro módulo
 }
 
--- Carregando os módulos (Pastas)
-local TeleportModule = loadstring(game:HttpGet(URLS.Teleport))()
-local VisualsModule  = loadstring(game:HttpGet(URLS.Visual))()
-local FruitsModule   = loadstring(game:HttpGet(URLS.Fruits))()
+-- === 3. CARREGAMENTO SEGURO DOS MÓDULOS ===
+local function GetModule(url)
+    local success, result = pcall(function() return loadstring(game:HttpGet(url))() end)
+    if success then return result else return nil end
+end
 
--- === CRIAÇÃO DA JANELA ===
-local Window = Rayfield:CreateWindow({
-   Name = "Matheus Hub | V2 Complex",
-   LoadingTitle = "Carregando Módulos...",
-   LoadingSubtitle = "by Matheus",
-   ConfigurationSaving = { Enabled = true, FolderName = "MatheusHub", FileName = "Config" },
-   KeySystem = false
-})
+local TeleportModule = GetModule(URLS.Teleport)
+local VisualsModule  = GetModule(URLS.Visual)
+local FruitsModule   = GetModule(URLS.Fruits)
 
--- === ABA TELEPORT (ESTILO HOHO/TSUO) ===
-local TeleportTab = Window:CreateTab("Teleport", 4483362458)
+-- === 4. DETECÇÃO DE DADOS DO JOGADOR ===
+local PlaceID = game.PlaceId
+local Player = game.Players.LocalPlayer
+local CurrentSea = "Sea 1"
 
--- Lista de nomes para o Dropdown (Pura, sem coordenadas)
-local IslandList = {
+if PlaceID == 2753915549 then CurrentSea = "Sea 1"
+elseif PlaceID == 4442272183 or PlaceID == 4442245441 then CurrentSea = "Sea 2"
+elseif PlaceID == 7449423635 then CurrentSea = "Sea 3" end
+
+-- Tabelas de Controle
+local Select_World_Sea = CurrentSea
+local Select_Island_Travelling = ""
+
+local IslandNames = {
     ["Sea 1"] = {"Starter Island", "Jungle", "Desert", "Middle Town", "Frozen Village", "Marineford", "Skypiea", "Prison", "Magma Village", "Fountain City"},
     ["Sea 2"] = {"Cafe", "Kingdom of Rose", "Green Zone", "Graveyard", "Snow Mountain", "Hot and Cold", "Cursed Ship", "Ice Castle", "Forgotten Island", "Dark Arena"},
     ["Sea 3"] = {"Mansion", "Port Town", "Hydra Island", "Floating Turtle", "Castle on the Sea", "Haunted Castle", "Sea of Treats", "Tiki Outpost"}
 }
 
-local SelectedSea = CurrentSea
-local SelectedIsland = ""
+-- === 5. CRIAÇÃO DA JANELA PRINCIPAL ===
+local Window = Rayfield:CreateWindow({
+   Name = "Matheus Hub | V2 Ultra Complex",
+   LoadingTitle = "Iniciando Matheus Hub...",
+   LoadingSubtitle = "by Matheus (2026 Edition)",
+   ConfigurationSaving = { Enabled = true, FolderName = "MatheusHub", FileName = "MainConfig" },
+   KeySystem = false
+})
 
-TeleportTab:CreateSection("World Travel")
+-- ==========================================
+-- ABA 1: TELEPORT (PROFISSIONAL)
+-- ==========================================
+local TeleportTab = Window:CreateTab("Teleport", 4483362458)
 
--- Botões de Viagem entre Mundos (Padrão Tsuo)
-local WorldButtons = {
-    {"Travel Sea 1", "TravelMain"},
-    {"Travel Sea 2", "TravelDressrosa"},
-    {"Travel Sea 3", "TravelZou"}
-}
+TeleportTab:CreateSection("World Travel (Fast Travel)")
 
-for _, data in pairs(WorldButtons) do
-    TeleportTab:CreateButton({
-        Name = data[1],
-        Callback = function()
-            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(data[2])
-        end,
-    })
-end
+TeleportTab:CreateButton({
+    Name = "Travel Sea 1 (Old World)",
+    Callback = function() game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelMain") end,
+})
 
-TeleportTab:CreateSection("Island Teleport")
+TeleportTab:CreateButton({
+    Name = "Travel Sea 2 (New World)",
+    Callback = function() game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelDressrosa") end,
+})
 
--- Dropdown de Seleção de Mar
+TeleportTab:CreateButton({
+    Name = "Travel Sea 3 (New World)",
+    Callback = function() game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelZou") end,
+})
+
+TeleportTab:CreateSection("Island Teleport Settings")
+
 TeleportTab:CreateDropdown({
-    Name = "Select Sea",
+    Name = "Select Sea Target",
     Options = {"Sea 1", "Sea 2", "Sea 3"},
     CurrentOption = {CurrentSea},
-    Flag = "SeaDropdown",
+    Flag = "SeaSelectionFlag",
     Callback = function(Option)
-        SelectedSea = Option[1]
-        -- Atualiza o Dropdown de ilhas com a lista correta
-        Rayfield.Flags["IslandDropdown"]:Set(IslandList[SelectedSea])
+        Select_World_Sea = Option[1]
+        Rayfield.Flags["IslandSelectionFlag"]:Set(IslandNames[Select_World_Sea])
     end,
 })
 
--- Dropdown de Seleção de Ilha
 TeleportTab:CreateDropdown({
-    Name = "Select Island",
-    Options = IslandList[CurrentSea],
+    Name = "Select Target Island",
+    Options = IslandNames[CurrentSea],
     CurrentOption = {""},
-    Flag = "IslandDropdown",
+    Flag = "IslandSelectionFlag",
     Callback = function(Option)
-        SelectedIsland = Option[1]
+        Select_Island_Travelling = Option[1]
     end,
 })
 
--- Toggle de Iniciar Teleporte (Voo do Tsuo)
 TeleportTab:CreateToggle({
-    Name = "Start Teleport",
+    Name = "Active Auto Teleport (Tween Mode)",
     CurrentValue = false,
-    Flag = "ToggleTeleport",
+    Flag = "TPToggleFlag",
     Callback = function(Value)
         _G.Teleporting = Value
         if Value then
-            if SelectedIsland ~= "" then
-                -- Puxa a CFrame do módulo externo
-                local target = TeleportModule.Islands[SelectedSea][SelectedIsland]
-                if target then
-                    TeleportModule.ToPos(target, true)
-                end
+            if Select_Island_Travelling ~= "" and TeleportModule then
+                local target = TeleportModule.Islands[Select_World_Sea][Select_Island_Travelling]
+                if target then TeleportModule.ToPos(target, true) end
             else
                 Rayfield:Notify({Title = "Error", Content = "Select an Island First!", Duration = 3})
-                Rayfield.Flags["ToggleTeleport"]:Set(false)
+                Rayfield.Flags["TPToggleFlag"]:Set(false)
             end
         else
-            -- Para o voo
-            TeleportModule.ToPos(nil, false)
+            if TeleportModule then TeleportModule.ToPos(nil, false) end
         end
     end,
 })
 
-
-
--- === ABA DE VISUALS ===
+-- ==========================================
+-- ABA 2: VISUALS (ESP & INFO)
+-- ==========================================
 local VisualTab = Window:CreateTab("Visuals", 4483362458)
+
+VisualTab:CreateSection("ESP Settings")
+
 VisualTab:CreateToggle({
-   Name = "Player ESP",
+   Name = "Player ESP (Show Name/Box)",
    CurrentValue = false,
-   Callback = function(Value) VisualsModule.PlayerESP(Value) end,
-})
-VisualTab:CreateToggle({
-   Name = "Fruit ESP",
-   CurrentValue = false,
-   Callback = function(Value) VisualsModule.FruitESP(Value) end,
+   Callback = function(Value) if VisualsModule then VisualsModule.PlayerESP(Value) end end,
 })
 
--- === ABA DE FRUTAS (CORRIGIDA E CONECTADA) ===
+VisualTab:CreateToggle({
+   Name = "Fruit ESP (Show Spawned)",
+   CurrentValue = false,
+   Callback = function(Value) if VisualsModule then VisualsModule.FruitESP(Value) end end,
+})
+
+-- ==========================================
+-- ABA 3: DEVIL FRUIT (MANAGER)
+-- ==========================================
 local FruitTab = Window:CreateTab("Devil Fruit", 4483362458)
 
-FruitTab:CreateSection("Fruit Collector & Store")
+FruitTab:CreateSection("Automated Fruit Management")
 
--- Corrigido: Agora chama FruitsModule (o arquivo certo)
 FruitTab:CreateToggle({
     Name = "Auto Collect Spawned Fruits",
     CurrentValue = false,
-    Flag = "TsuoFruitToggle",
-    Callback = function(Value)
-        FruitsModule.AutoCollectFruit(Value)
-    end,
+    Callback = function(Value) if FruitsModule then FruitsModule.AutoCollectFruit(Value) end end,
 })
 
--- Bring Fruit FruitTab
 FruitTab:CreateToggle({
-    Name = "Bring All Fruits (Exploit)",
+    Name = "Bring All Fruits to Character",
     CurrentValue = false,
-    Flag = "BringFruits",
-    Callback = function(Value)
-        FruitsModule.BringFruits(Value)
-    end,
+    Callback = function(Value) if FruitsModule then FruitsModule.BringFruits(Value) end end,
 })
 
-
--- Corrigido: Agora chama FruitsModule.AutoStoreFruit
 FruitTab:CreateToggle({
-    Name = "Auto Store Fruit",
+    Name = "Auto Store Fruits in Inventory",
     CurrentValue = false,
-    Flag = "AutoStore",
-    Callback = function(Value)
-        _G.AutoStore = Value
-        if Value then
-            spawn(function()
-                while _G.AutoStore do
-                    FruitsModule.AutoStoreFruit(true)
-                    task.wait(2)
-                end
-            end)
-        end
-    end,
+    Callback = function(Value) if FruitsModule then FruitsModule.AutoStoreFruit(Value) end end,
 })
 
 FruitTab:CreateSection("Gacha & Shop Sniper")
 
--- Corrigido: Auto random fruit BuyGacha
 FruitTab:CreateToggle({
-    Name = "Auto Gacha (Fica Tentando)",
+    Name = "Auto Gacha Loop (Every 60s)",
     CurrentValue = false,
-    Flag = "AutoGachaLoop",
+    Flag = "GachaLoopFlag",
     Callback = function(Value)
-        _G.TentandoGacha = Value
+        _G.AutoGachaLoop = Value
         if Value then
             task.spawn(function()
-                while _G.TentandoGacha do
-                    -- Tenta girar a fruta
-                    FruitsModule.BuyGacha()
-                    -- Espera 60 segundos antes de tentar de novo
-                    -- Assim não dá lag e pega a fruta no minuto que liberar
-                    task.wait(60) 
+                while _G.AutoGachaLoop do
+                    if FruitsModule then FruitsModule.BuyGacha() end
+                    task.wait(60)
                 end
             end)
         end
     end,
 })
 
-
--- Sniper Label (Agora chamando o seu módulo atualizado)
-local StockLabel = FruitTab:CreateLabel("Fetching Stock...")
+local StockLabel = FruitTab:CreateLabel("Stock Status: Fetching Data...")
 
 task.spawn(function()
-    while task.wait(30) do
-        -- Em vez de fazer a conta aqui, ele pede para o VisualsModule o texto pronto
-        local currentStock = VisualsModule.GetStock()
-        StockLabel:Set("Stock: " .. currentStock)
+    while task.wait(15) do
+        if VisualsModule then
+            pcall(function()
+                local stock = VisualsModule.GetStock()
+                StockLabel:Set("Stock: " .. tostring(stock))
+            end)
+        end
     end
 end)
 
+-- ==========================================
+-- ABA 4: CONFIG & CREDITS
+-- ==========================================
+local ConfigTab = Window:CreateTab("Config", 4483362458)
 
--- [[ SISTEMA ANTI-AFK - TSUO STYLE ]]
+ConfigTab:CreateSection("Server Utils")
+
+ConfigTab:CreateButton({
+    Name = "Rejoin Server",
+    Callback = function() game:GetService("TeleportService"):Teleport(game.PlaceId, Player) end,
+})
+
+ConfigTab:CreateButton({
+    Name = "Server Hop (Search New)",
+    Callback = function()
+        local Http = game:GetService("HttpService")
+        local TPS = game:GetService("TeleportService")
+        local Api = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Desc&limit=100"
+        local _rt = Http:JSONDecode(game:HttpGet(Api))
+        for _, v in pairs(_rt.data) do
+            if v.playing < v.maxPlayers and v.id ~= game.JobId then
+                TPS:TeleportToPlaceInstance(game.PlaceId, v.id)
+                break
+            end
+        end
+    end,
+})
+
+ConfigTab:CreateSection("Credits")
+ConfigTab:CreateParagraph({Title = "Developer", Content = "Matheus - V2 Complex Edition"})
+ConfigTab:CreateParagraph({Title = "Support", Content = "Based on OpenSource Scripts (Hoho/Tsuo/Redz)"})
+
+-- [[ ANTI-AFK SYSTEM ]]
 local VirtualUser = game:GetService("VirtualUser")
-game:GetService("Players").LocalPlayer.Idled:Connect(function()
+Player.Idled:Connect(function()
     VirtualUser:CaptureController()
     VirtualUser:ClickButton2(Vector2.new())
 end)
 
-Rayfield:LoadConfiguration() -- Carrega as configs salvas do usuário
+Rayfield:LoadConfiguration()
+Rayfield:Notify({Title = "Matheus Hub", Content = "Welcome back, King!", Duration = 5})
 
-
-Rayfield:Notify({Title = "Matheus Hub", Content = "O Moreninha Covaaardeee!", Duration = 3})
