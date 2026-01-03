@@ -155,34 +155,71 @@ VisualTab:CreateToggle({
 
 -- === ABA DE FRUTAS (MANTIDA A SUA COMPLEXA) ===
 local FruitTab = Window:CreateTab("Devil Fruit", 4483362458)
-FruitTab:CreateSection("Farm de Frutas")
 
+FruitTab:CreateSection("Fruit Collector & Store")
+
+-- Auto Collect (O scanner que já fizemos)
 FruitTab:CreateToggle({
-   Name = "Auto Collect Fruit (Voo Seguro)",
-   CurrentValue = false,
-   Flag = "AutoFruit",
-   Callback = function(Value)
-      if Value then
-         FruitsModule.TeleportToFruit(true)
-         task.wait(1)
-         Rayfield.Flags["AutoFruit"]:Set(false)
-      end
-   end,
+    Name = "Auto Collect Spawned Fruits",
+    CurrentValue = false,
+    Flag = "TsuoFruitToggle",
+    Callback = function(Value)
+        TeleportModule.AutoCollectFruit(Value)
+    end,
 })
 
-FruitTab:CreateSection("Loja e Gacha")
-
+-- Auto Store (Baseado no Tsuo)
 FruitTab:CreateToggle({
-   Name = "Gacha de Fruta (Random)",
-   CurrentValue = false,
-   Flag = "GachaToggle",
-   Callback = function(Value)
-      if Value then
-         FruitsModule.BuyGacha(true)
-         task.wait(1)
-         Rayfield.Flags["GachaToggle"]:Set(false)
-      end
-   end,
+    Name = "Auto Store Fruit",
+    CurrentValue = false,
+    Flag = "AutoStore",
+    Callback = function(Value)
+        _G.AutoStore = Value
+        if Value then
+            spawn(function()
+                while _G.AutoStore do
+                    wait(2)
+                    TeleportModule.AutoStoreFruit()
+                end
+            end)
+        end
+    end,
 })
 
-Rayfield:Notify({Title = "Matheus Hub", Content = "Script Pronto para Uso!", Duration = 5})
+FruitTab:CreateSection("Gacha & Shop Sniper")
+
+-- Auto Gacha (Tsuo Style)
+FruitTab:CreateToggle({
+    Name = "Auto Buy Gacha (Cousin)",
+    CurrentValue = false,
+    Flag = "AutoGacha",
+    Callback = function(Value)
+        _G.AutoGacha = Value
+        spawn(function()
+            while _G.AutoGacha do
+                TeleportModule.BuyGacha()
+                wait(10) -- Tenta comprar a cada 10 seg (só gasta se estiver disponível)
+            end
+        end)
+    end,
+})
+
+-- Sniper Label (Mostra a fruta em stock)
+local StockLabel = FruitTab:CreateLabel("Fetching Stock...")
+
+spawn(function()
+    while wait(30) do
+        -- Lógica de Sniper do Tsuo para ler o stock da loja
+        local stock = game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("GetFruits")
+        local text = "Stock: "
+        for i, v in pairs(stock) do
+            if v.OnSale then
+                text = text .. v.Name .. " | "
+            end
+        end
+        StockLabel:Set(text)
+    end
+end)
+
+
+Rayfield:Notify({Title = "Matheus Hub", Content = "O Moreninha Covaaardeee!", Duration = 3})
