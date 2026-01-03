@@ -222,6 +222,14 @@ spawn(function()
     end
 end)
 
+-- [[ SISTEMA ANTI-AFK - TSUO STYLE ]]
+local VirtualUser = game:GetService("VirtualUser")
+game:GetService("Players").LocalPlayer.Idled:Connect(function()
+    VirtualUser:CaptureController()
+    VirtualUser:ClickButton2(Vector2.new())
+end)
+
+Rayfield:LoadConfiguration() -- Carrega as configs salvas do usuário
 
 
 Rayfield:Notify({Title = "Matheus Hub", Content = "O Moreninha Covaaardeee!", Duration = 3})
