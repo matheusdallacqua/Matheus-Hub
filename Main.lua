@@ -9,7 +9,7 @@ local URLS = {
     Teleport = "https://raw.githubusercontent.com/matheusdallacqua/Matheus-Hub/refs/heads/main/Teleport.lua",
     Visual   = "https://raw.githubusercontent.com/matheusdallacqua/Matheus-Hub/refs/heads/main/Visual.lua",
     Fruits   = "https://raw.githubusercontent.com/matheusdallacqua/Matheus-Hub/refs/heads/main/Fruits.lua",
-    Farm     =  -- Futuro módulo
+    Farm     = "https://raw.githubusercontent.com/matheusdallacqua/Matheus-Hub/refs/heads/main/Farm.lua",
 }
 
 -- === 3. CARREGAMENTO SEGURO DOS MÓDULOS ===
@@ -231,5 +231,5 @@ Player.Idled:Connect(function()
 end)
 
 Rayfield:LoadConfiguration()
-Rayfield:Notify({Title = "As Alternativas são as MELHORES", Content = "Blox Fruit- Alternativa Hub", Duration = 5})
+Rayfield:Notify({Title = "team Morena do cabelo liso", Content = "Blox Fruit- Matheus Hub", Duration = 5})
 
