@@ -4,7 +4,7 @@
 -- === 1. CARREGAMENTO DA INTERFACE (RAYFIELD) ===
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
--- === 2. LINKS DO REPOSITÓRIO GITHUB ===
+-- === 2. LINKS DO REPOSITÃ“RIO GITHUB ===
 local URLS = {
     Teleport = "https://raw.githubusercontent.com/matheusdallacqua/Matheus-Hub/refs/heads/main/Teleport.lua",
     Visual   = "https://raw.githubusercontent.com/matheusdallacqua/Matheus-Hub/refs/heads/main/Visual.lua",
@@ -12,7 +12,7 @@ local URLS = {
     Farm     = "https://raw.githubusercontent.com/matheusdallacqua/Matheus-Hub/refs/heads/main/Farm.lua",
 }
 
--- === 3. CARREGAMENTO SEGURO DOS MÓDULOS ===
+-- === 3. CARREGAMENTO SEGURO DOS MÃ“DULOS ===
 local function GetModule(url)
     local success, result = pcall(function() return loadstring(game:HttpGet(url))() end)
     if success then return result else return nil end
@@ -23,7 +23,7 @@ local VisualsModule  = GetModule(URLS.Visual)
 local FruitsModule   = GetModule(URLS.Fruits)
 local FarmModule     = GetModule(URLS.Farm)
 
--- === 4. DETECÇÃO DE DADOS DO JOGADOR ===
+-- === 4. DETECÃ‡ÃƒO DE DADOS DO JOGADOR ===
 local PlaceID = game.PlaceId
 local Player = game.Players.LocalPlayer
 local CurrentSea = "Sea 1"
@@ -41,7 +41,7 @@ local IslandNames = {
     ["Sea 3"] = {"Mansion", "Port Town", "Hydra Island", "Floating Turtle", "Castle on the Sea", "Haunted Castle", "Sea of Treats", "Tiki Outpost"}
 }
 
--- === 5. CRIAÇÃO DA JANELA PRINCIPAL ===
+-- === 5. CRIAÃ‡ÃƒO DA JANELA PRINCIPAL ===
 local Window = Rayfield:CreateWindow({
    Name = "Matheus Hub | V2 Ultra Complex",
    LoadingTitle = "Iniciando Matheus Hub...",
@@ -51,16 +51,9 @@ local Window = Rayfield:CreateWindow({
 })
 
 -- ==========================================
--- ABA 1: FARM (BOTÕES PRINCIPAIS)
+-- ABA 1: FARM (BOTÃ•ES PRINCIPAIS)
 -- ==========================================
 local FarmTab = Window:CreateTab("Farm", 4483362458)
-
--- Seção de Status (Muito comum em scripts elite)
-FarmTab:CreateSection("Farm Status")
-local StatusLabel = FarmTab:CreateParagraph({Title = "Current Task:", Content = "Waiting for start..."})
-
-FarmTab:CreateSection("Main Farm Settings")
-
 
 FarmTab:CreateSection("Auto Farm")
 
@@ -69,6 +62,11 @@ FarmTab:CreateSection("Auto Farm")
 -- ==========================================
 local FarmTab = Window:CreateTab("Auto Farm", 4483362458)
 
+-- SeÃ§Ã£o de Status (Muito comum em scripts elite)
+FarmTab:CreateSection("Farm Status")
+local StatusLabel = FarmTab:CreateParagraph({Title = "Current Task:", Content = "Waiting for start..."})
+
+FarmTab:CreateSection("Main Farm Settings")
 
 -- Dropdown de Modo (O visual do Tsuo tem isso para escolher entre Level, Bone, etc)
 FarmTab:CreateDropdown({
@@ -99,7 +97,7 @@ FarmTab:CreateToggle({
 
 FarmTab:CreateSection("Mob Settings")
 
--- Função de Agrupar Mobs (Visual clássico do Redz/Tsuo)
+-- FunÃ§Ã£o de Agrupar Mobs (Visual clÃ¡ssico do Redz/Tsuo)
 FarmTab:CreateToggle({
     Name = "Bring Mobs (Fast Farm)",
     CurrentValue = true,
@@ -108,7 +106,7 @@ FarmTab:CreateToggle({
     end,
 })
 
--- Função de Bater Escondido
+-- FunÃ§Ã£o de Bater Escondido
 FarmTab:CreateToggle({
     Name = "Auto Clicker / Attack",
     CurrentValue = true,
@@ -132,7 +130,7 @@ FarmTab:CreateToggle({
 -- ==========================================
 local FarmConfigTab = Window:CreateTab("Farm Config", 4483362458)
 
--- Bloco FastAttack Delay que você enviou
+-- Bloco FastAttack Delay que vocÃª enviou
 local AttackList = {"0", "0.1", "0.175", "0.2", "0.25", "0.3", "0.35", "0.4", "0.45", "0.5", "0.55", "0.6", "0.65", "0.7", "0.75", "0.8", "0.85", "0.9", "0.95", "1"}
 FarmConfigTab:CreateDropdown({
 	Name = "FastAttack Delay",
@@ -195,7 +193,7 @@ spawn(function()
     end
 end)
 
--- Bloco Select Weapon que você enviou
+-- Bloco Select Weapon que vocÃª enviou
 FarmConfigTab:CreateSection("Weapon Settings")
 
 local WeaponList = {"Melee","Sword","Fruit","Gun"}
@@ -212,7 +210,7 @@ FarmConfigTab:CreateDropdown({
     end    
 })
 
--- O "cérebro" das armas
+-- O "cÃ©rebro" das armas
 task.spawn(function()
     while wait() do
         pcall(function()
@@ -368,4 +366,3 @@ end)
 
 Rayfield:LoadConfiguration()
 Rayfield:Notify({Title = "team Morena do cabelo liso", Content = "Blox Fruit- Matheus Hub", Duration = 5})
-
