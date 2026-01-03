@@ -268,27 +268,45 @@ end)
 
 -- ==========================================
 -- ABA 3: TELEPORT (PROFISSIONAL)
--- ==========================================
-local TeleportTab = Window:CreateTab("Teleport", 4483362458)
+--- Função para facilitar a criação dos Dropdowns de Teleport
+local function CreateSeaDropdown(seaName, tabTitle)
+    local Tab = Window:CreateTab(tabTitle, 4483362458)
+    local OptionsList = {}
+    
+    -- Pega os nomes das ilhas da tabela do TeleportModule
+    for name, _ in pairs(TeleportModule.Islands[seaName]) do
+        table.insert(OptionsList, name)
+    end
+    table.sort(OptionsList) -- Coloca em ordem alfabética
 
-TeleportTab:CreateSection("World Travel")
+    local Selected = ""
+    Tab:CreateDropdown({
+        Name = "Select Island",
+        Options = OptionsList,
+        CurrentOption = {""},
+        Callback = function(Option) Selected = Option[1] end,
+    })
 
-TeleportTab:CreateButton({
-    Name = "Travel Sea 1",
-    Callback = function() game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelMain") end,
-})
+    Tab:CreateToggle({
+        Name = "Teleport To Island",
+        CurrentValue = false,
+        Callback = function(Value)
+            if Value then
+                local target = TeleportModule.Islands[seaName][Selected]
+                if target then TeleportModule.ToPos(target, true) 
+                else Rayfield:Notify({Title="Error", Content="Select an island!"}) end
+            else
+                TeleportModule.ToPos(nil, false)
+            end
+        end,
+    })
+end
 
-TeleportTab:CreateButton({
-    Name = "Travel Sea 2",
-    Callback = function() game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelDressrosa") end,
-})
+-- Criando as abas
+CreateSeaDropdown("Sea 1", "Sea 1 TP")
+CreateSeaDropdown("Sea 2", "Sea 2 TP")
+CreateSeaDropdown("Sea 3", "Sea 3 TP")
 
-TeleportTab:CreateButton({
-    Name = "Travel Sea 3",
-    Callback = function() game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelZou") end,
-})
-
--- ... [O resto do código de Visuals, Fruits e Config permanece o mesmo abaixo] ...
 -- O Loop exato do Opensource do Tsuo para converter o Delay
 spawn(function()
     while wait(.1) do
