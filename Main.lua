@@ -53,9 +53,7 @@ local Window = Rayfield:CreateWindow({
 -- ==========================================
 -- ABA 1: FARM (BOTÃ•ES PRINCIPAIS)
 -- ==========================================
-local FarmTab = Window:CreateTab("Farm", 4483362458)
-
-FarmTab:CreateSection("Auto Farm")
+local FarmTab = Window:CreateTab("Home", 4483362458)
 
 -- ==========================================
 -- ABA 1: FARM (VISUAL OPENSOURCE STYLE)
@@ -95,6 +93,12 @@ FarmTab:CreateToggle({
     end,
 })
 
+
+-- ==========================================
+-- ABA 2: FARM CONFIG
+-- ==========================================
+local FarmConfigTab = Window:CreateTab("Farm Config", 4483362458)
+
 FarmTab:CreateSection("Mob Settings")
 
 -- FunÃ§Ã£o de Agrupar Mobs (Visual clÃ¡ssico do Redz/Tsuo)
@@ -124,11 +128,6 @@ FarmTab:CreateToggle({
         if FarmModule then FarmModule.FastAttack(Value) end
     end,
 })
-
--- ==========================================
--- ABA 2: FARM CONFIG
--- ==========================================
-local FarmConfigTab = Window:CreateTab("Farm Config", 4483362458)
 
 -- Bloco FastAttack Delay que vocÃª enviou
 local AttackList = {"0", "0.1", "0.175", "0.2", "0.25", "0.3", "0.35", "0.4", "0.45", "0.5", "0.55", "0.6", "0.65", "0.7", "0.75", "0.8", "0.85", "0.9", "0.95", "1"}
