@@ -199,19 +199,11 @@ FruitTab:CreateToggle({
 
 FruitTab:CreateSection("Gacha & Shop Sniper")
 
--- Corrigido: Agora chama FruitsModule.BuyGacha
+-- Corrigido: Auto random fruit BuyGacha
 FruitTab:CreateToggle({
-    Name = "Auto Buy Gacha (Cousin)",
-    CurrentValue = false,
-    Flag = "AutoGacha",
-    Callback = function(Value)
-        _G.AutoGacha = Value
-        spawn(function()
-            while _G.AutoGacha do
-                FruitsModule.BuyGacha()
-                task.wait(10)
-            end
-        end)
+    Name = "Girar Fruta (Blox Fruit Gacha)",
+    Callback = function()
+        FruitsModule.BuyGacha()
     end,
 })
 
