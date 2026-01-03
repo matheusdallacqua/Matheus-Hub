@@ -52,25 +52,46 @@ function FarmModule.EquipWeapon()
     end)
 end
 
--- [[ 4. FAST ATTACK (CLIQUE NA TELA - OPENSOURCE STYLE) ]]
+-- [[ 4. FAST ATTACK ULTRA RAPIDO (CANCELAMENTO DE ANIMAÇÃO) ]]
 function FarmModule.FastAttack(Toggle)
     _G.FastAttack = Toggle
+    
     task.spawn(function()
+        -- Puxa as bibliotecas internas do jogo
+        local CombatFramework = require(Player.PlayerScripts.CombatFramework)
+        local CombatFrameworkLib = debug.getupvalues(CombatFramework)[2]
+        
         while _G.FastAttack do
-            task.wait(_G.FastAttackDelay or 0.1)
+            -- O delay aqui deve ser mínimo (quase 0) para o soco sair infinito
+            task.wait(_G.FastAttackDelay or 0.05) 
+            
             pcall(function()
                 if Player.Character:FindFirstChildOfClass("Tool") then
-                    -- Simulação de clique direto na Viewport (Igual ao opensource.txt)
-                    VirtualUser:CaptureController()
-                    VirtualUser:Button1Down(Vector2.new(850, 450), game.Workspace.CurrentCamera.CFrame)
+                    -- 1. Pega o controlador de ataque ativo
+                    local Controller = CombatFrameworkLib.activeController
                     
-                    -- Validação de Hits (Remote que faz o dano contar)
-                    game:GetService("ReplicatedStorage").Remotes.Validator:FireServer(math.huge)
+                    if Controller and Controller.equipped then
+                        -- 2. O PULO DO GATO: Reseta os timers internos de ataque do jogo
+                        -- Isso faz o jogo achar que você ainda não deu o primeiro soco
+                        Controller.hitboxMagnitude = 60
+                        Controller.attackInterval = 0
+                        Controller.maxAttacks = 1
+                        Controller.increment = 3 -- Pula para o soco final da animação que é mais rápido
+                        Controller.timeToNextAttack = 0
+                        Controller.blocking = false
+                        
+                        -- 3. Dispara o ataque diretamente no Framework
+                        Controller:attack()
+                        
+                        -- 4. Validador (Remote que faz o dano ser real e não apenas visual)
+                        game:GetService("ReplicatedStorage").Remotes.Validator:FireServer(math.huge)
+                    end
                 end
             end)
         end
     end)
 end
+
 
 -- [[ 5. DATABASE DE QUESTS (SEA 1) ]]
 local QuestData = {
