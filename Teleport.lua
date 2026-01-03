@@ -3,33 +3,32 @@ local TeleportModule = {}
 -- [[ COORDENADAS DO MATHEUS HUB ]]
 TeleportModule.Islands = {
     ["Sea 1"] = {
-        ["Starter Island"] = CFrame.new(-1103, 15, 3838),
-        ["Jungle"] = CFrame.new(-1255, 10, 310),
-        ["Desert"] = CFrame.new(1094, 10, 437),
-        ["Middle Town"] = CFrame.new(-650, 20, 1583),
-        ["Prison"] = CFrame.new(4875, 10, 734),
-        ["Magma Village"] = CFrame.new(-5241, 12, 8504),
-        ["Fountain City"] = CFrame.new(5122, 65, 4105)
+        ["Starter Island"] = CFrame.new(973, 25, 1413),
+        ["Jungle"] = CFrame.new(-1612, 50, 147),
+        ["Desert"] = CFrame.new(944, 25, 4373),
+        ["Middle Town"] = CFrame.new(-690, 25, 1583),
+        ["Prison"] = CFrame.new(4875, 25, 734),
+        ["Magma Village"] = CFrame.new(-5244, 25, 8486),
+        ["Fountain City"] = CFrame.new(5127, 70, 4105)
     },
     ["Sea 2"] = {
-        ["Kingdom of Rose"] = CFrame.new(-480, 20, 720),
-        ["Green Zone"] = CFrame.new(-2448, 18, -2699),
-        ["Graveyard"] = CFrame.new(-5422, 15, -2630),
-        ["Snow Mountain"] = CFrame.new(606, 405, -5370),
-        ["Cursed Ship"] = CFrame.new(923, 130, 32853),
-        ["Ice Castle"] = CFrame.new(5422, 35, -6064),
-        ["Forgotten Island"] = CFrame.new(-3033, 240, -10179)
+        ["Cafe"] = CFrame.new(-382, 85, 255), -- Café Adicionado
+        ["Kingdom of Rose"] = CFrame.new(-451, 85, 1727),
+        ["Green Zone"] = CFrame.new(-2448, 85, -253),
+        ["Graveyard"] = CFrame.new(-2322, 25, 3140),
+        ["Snow Mountain"] = CFrame.new(900, 50, 4400),
+        ["Cursed Ship"] = CFrame.new(923, 140, 32852),
+        ["Ice Castle"] = CFrame.new(6140, 310, -6742),
+        ["Forgotten Island"] = CFrame.new(-3033, 250, -10175)
     },
     ["Sea 3"] = {
-        ["Port Town"] = CFrame.new(-8670, 20, 5500),
-        ["Hydra Island"] = CFrame.new(5745, 615, -270),
-        ["Floating Turtle"] = CFrame.new(-13246, 335, -7625),
-        ["Castle on the Sea"] = CFrame.new(-5035, 320, -3150),
-        ["Haunted Castle"] = CFrame.new(-9514, 170, -8406),
-        ["Tiki Outpost"] = CFrame.new(-16234, 15, 465),
-        ["Submerged Island"] = CFrame.new(-19450, -240, 1230),
-        ["Prehistoric Island"] = CFrame.new(-21000, 55, -5000),
-        ["Christmas Island"] = CFrame.new(2315, 20, 1150)
+        ["Mansion"] = CFrame.new(-12463, 350, -7541),
+        ["Port Town"] = CFrame.new(-780, 25, 5322),
+        ["Hydra Island"] = CFrame.new(5747, 630, -266),
+        ["Floating Turtle"] = CFrame.new(-13274, 550, -7583),
+        ["Castle on the Sea"] = CFrame.new(-5075, 330, -3153),
+        ["Haunted Castle"] = CFrame.new(-9547, 180, 5532),
+        ["Tiki Outpost"] = CFrame.new(-16234, 25, 485)
     }
 }
 
