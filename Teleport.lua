@@ -38,87 +38,37 @@ function TeleportModule.ToPos(targetCFrame, state)
     local player = game.Players.LocalPlayer
     local char = player.Character
     if not char or not char:FindFirstChild("HumanoidRootPart") then return end
-    
     local root = char.HumanoidRootPart
 
-    -- Se state for false, CANCELA TUDO
     if state == false then
-        if _G.Tweening then 
-            _G.Tweening:Cancel() 
-            _G.Tweening = nil
-        end
-        -- Remove BodyVelocity se existir (para o boneco não cair girando)
-        if root:FindFirstChild("BodyVelocity") then
-            root.BodyVelocity:Destroy()
-        end
+        if _G.Tweening then _G.Tweening:Cancel() _G.Tweening = nil end
+        if root:FindFirstChild("BodyVelocity") then root.BodyVelocity:Destroy() end
         _G.Teleporting = false
         return
     end
 
-    -- Inicia o Voo
     local dist = (targetCFrame.Position - root.Position).Magnitude
-    local speed = 350 -- Velocidade ajustada
+    local speed = 350 
     
-    -- Usa BodyVelocity para sustentar o voo (melhor que só Tween)
-    local bv = Instance.new("BodyVelocity")
+    local bv = root:FindFirstChild("BodyVelocity") or Instance.new("BodyVelocity")
     bv.Velocity = Vector3.new(0, 0, 0)
     bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
     bv.Parent = root
     
-    local tweenInfo = TweenInfo.new(dist / speed, Enum.EasingStyle.Linear)
-    _G.Tweening = game:GetService("TweenService"):Create(root, tweenInfo, {CFrame = targetCFrame})
-    
+    _G.Teleporting = true
+    _G.Tweening = game:GetService("TweenService"):Create(root, TweenInfo.new(dist / speed, Enum.EasingStyle.Linear), {CFrame = targetCFrame})
     _G.Tweening:Play()
 
-    -- Loop de Noclip para não bater em paredes
     spawn(function()
         while _G.Teleporting and _G.Tweening do
-            if char then
-                for _, v in pairs(char:GetDescendants()) do
-                    if v:IsA("BasePart") then v.CanCollide = false end
-                end
+            for _, v in pairs(char:GetDescendants()) do
+                if v:IsA("BasePart") then v.CanCollide = false end
             end
             task.wait()
         end
         if root:FindFirstChild("BodyVelocity") then root.BodyVelocity:Destroy() end
     end)
-    
-    return _G.Tweening
 end
 
 return TeleportModule
 
-
-
-local TeleportModule = {}
-
--- [Mantenha suas coordenadas aqui em cima...]
-
--- FUNÇÃO AUTO FRUIT EXTRAÍDA DO TSUO
-function TeleportModule.AutoCollectFruit(state)
-    _G.Auto_Collect_Fruit = state
-    
-    spawn(function()
-        while _G.Auto_Collect_Fruit do
-            task.wait(0.1) -- Loop rápido para não perder o spawn
-            for i, v in pairs(game.Workspace:GetChildren()) do
-                -- Lógica do Tsuo: Verifica se é uma Tool e se tem "Fruit" no nome
-                if v:IsA("Tool") and (string.find(v.Name, "Fruit") or string.find(v.Name, "Fruta")) then
-                    local handle = v:FindFirstChild("Handle")
-                    if handle then
-                        local root = game.Players.LocalPlayer.Character.HumanoidRootPart
-                        -- Teleporta exatamente para a posição da fruta
-                        root.CFrame = handle.CFrame
-                        -- Simula o toque (essencial do opensource)
-                        firetouchinterest(root, handle, 0)
-                        firetouchinterest(root, handle, 1)
-                        task.wait(0.5)
-                    end
-                end
-            end
-        end
-    end)
-end
-
--- [Mantenha sua função TeleportModule.ToPos aqui embaixo...]
-return TeleportModule
