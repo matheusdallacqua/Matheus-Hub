@@ -1,24 +1,22 @@
 -- [[ PASTA: Fruits.lua - MATHEUS HUB COMPLEX EDITION ]]
 local FruitModule = {}
 
--- [[ AUTO COLLECT - SCANNER DO TSUO ]]
+-- [[ COLETOR TSUO 2026 ]]
 function FruitModule.AutoCollectFruit(state)
     _G.Auto_Collect_Fruit = state
     spawn(function()
         while _G.Auto_Collect_Fruit do
-            task.wait(0.1) 
-            for i, v in pairs(game.Workspace:GetChildren()) do
-                if v:IsA("Tool") and (v.Name:find("Fruit") or v.Name:find("Fruta")) then
-                    local handle = v:FindFirstChild("Handle")
-                    if handle then
-                        local char = game.Players.LocalPlayer.Character
-                        if char and char:FindFirstChild("HumanoidRootPart") then
-                            -- TP e Coleta Instantânea
-                            char.HumanoidRootPart.CFrame = handle.CFrame
-                            firetouchinterest(char.HumanoidRootPart, handle, 0)
-                            firetouchinterest(char.HumanoidRootPart, handle, 1)
-                            task.wait(0.5)
-                        end
+            task.wait(0.1)
+            for _, v in pairs(game.Workspace:GetChildren()) do
+                -- Detecção por nome e atributo (segurança 2026)
+                if v:IsA("Tool") and (v.Name:find("Fruit") or v.Name:find("Fruta") or v:GetAttribute("Fruit")) then
+                    local handle = v:FindFirstChild("Handle") or v:FindFirstChildWhichIsA("BasePart")
+                    local root = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    if handle and root then
+                        root.CFrame = handle.CFrame
+                        firetouchinterest(root, handle, 0)
+                        firetouchinterest(root, handle, 1)
+                        task.wait(0.5)
                     end
                 end
             end
@@ -26,24 +24,22 @@ function FruitModule.AutoCollectFruit(state)
     end)
 end
 
--- [[ AUTO STORE - LOGICA DO TSUO ]]
+-- [[ AUTO STORE TSUO ]]
 function FruitModule.AutoStoreFruit(state)
     _G.AutoStore = state
     spawn(function()
         while _G.AutoStore do
             task.wait(2)
             local char = game.Players.LocalPlayer.Character
-            if char then
-                local tool = char:FindFirstChildOfClass("Tool")
-                if tool and string.find(tool.Name, "Fruit") then
-                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", tool:GetAttribute("FruitName"), tool)
-                end
+            local tool = char and char:FindFirstChildOfClass("Tool")
+            if tool and (tool.Name:find("Fruit") or tool:GetAttribute("FruitName")) then
+                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", tool:GetAttribute("FruitName") or tool.Name, tool)
             end
         end
     end)
 end
 
--- [[ GACHA - REMOTOS DO TSUO ]]
+-- [[ GACHA ]]
 function FruitModule.BuyGacha()
     return game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("Cousin", "BuyItem")
 end
