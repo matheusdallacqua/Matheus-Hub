@@ -55,6 +55,13 @@ local Window = Rayfield:CreateWindow({
 -- ==========================================
 local FarmTab = Window:CreateTab("Farm", 4483362458)
 
+-- Seção de Status (Muito comum em scripts elite)
+FarmTab:CreateSection("Farm Status")
+local StatusLabel = FarmTab:CreateParagraph({Title = "Current Task:", Content = "Waiting for start..."})
+
+FarmTab:CreateSection("Main Farm Settings")
+
+
 FarmTab:CreateSection("Auto Farm")
 
 -- ==========================================
@@ -62,11 +69,6 @@ FarmTab:CreateSection("Auto Farm")
 -- ==========================================
 local FarmTab = Window:CreateTab("Auto Farm", 4483362458)
 
--- Seção de Status (Muito comum em scripts elite)
-FarmTab:CreateSection("Farm Status")
-local StatusLabel = FarmTab:CreateParagraph({Title = "Current Task:", Content = "Waiting for start..."})
-
-FarmTab:CreateSection("Main Farm Settings")
 
 -- Dropdown de Modo (O visual do Tsuo tem isso para escolher entre Level, Bone, etc)
 FarmTab:CreateDropdown({
