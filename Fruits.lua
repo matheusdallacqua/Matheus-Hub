@@ -6,15 +6,22 @@ local Remote = game:GetService("ReplicatedStorage").Remotes.CommF_
 local Player = game.Players.LocalPlayer
 
 -- [[ 1. BLOX FRUIT GACHA (GIRO REAL) ]]
+-- [[ BLOX FRUIT GACHA REAL - OPENSOURCE 2026 ]]
 function FruitModule.BuyGacha()
-    local result = Remote:InvokeServer("Cousin", "BuyItem")
-    -- Após girar, o Tsuo tenta guardar automaticamente 3 vezes
-    task.spawn(function()
-        for i = 1, 3 do
-            task.wait(1)
-            FruitModule.AutoStoreFruit(true)
-        end
+    -- Este é o Remote que o NPC oficial usa agora para girar frutas aleatórias
+    local success, result = pcall(function()
+        return game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BloxFruitGacha", "Roll")
     end)
+    
+    if success then
+        task.wait(1.5) -- Espera a fruta aparecer na mochila
+        -- Auto Store após girar
+        for _, item in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+            if item.Name:find("Fruit") or item.Name:find("Fruta") then
+                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", item.Name, item)
+            end
+        end
+    end
     return result
 end
 
@@ -90,10 +97,5 @@ function FruitModule.AutoStoreFruit(state)
     end)
 end
 
--- [[ 5. FRUIT SNIPER (AUTO BUY SE ESTIVER NO STOCK) ]]
-function FruitModule.SniperBuy(fruitName)
-    -- Compra uma fruta específica se ela estiver à venda
-    return Remote:InvokeServer("Shop", "BuyItem", fruitName)
-end
 
 return FruitModule
