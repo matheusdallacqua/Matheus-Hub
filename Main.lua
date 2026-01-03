@@ -57,6 +57,65 @@ local FarmTab = Window:CreateTab("Farm", 4483362458)
 
 FarmTab:CreateSection("Auto Farm")
 
+-- ==========================================
+-- ABA 1: FARM (VISUAL OPENSOURCE STYLE)
+-- ==========================================
+local FarmTab = Window:CreateTab("Auto Farm", 4483362458)
+
+-- Seção de Status (Muito comum em scripts elite)
+FarmTab:CreateSection("Farm Status")
+local StatusLabel = FarmTab:CreateParagraph({Title = "Current Task:", Content = "Waiting for start..."})
+
+FarmTab:CreateSection("Main Farm Settings")
+
+-- Dropdown de Modo (O visual do Tsuo tem isso para escolher entre Level, Bone, etc)
+FarmTab:CreateDropdown({
+    Name = "Select Farm Mode",
+    Options = {"Level Farm", "Nearest Farm", "Chest Farm"},
+    CurrentOption = {"Level Farm"},
+    Flag = "FarmMode",
+    Callback = function(Value)
+        _G.FarmMode = Value[1]
+    end    
+})
+
+-- O Toggle Principal (Com o visual limpo)
+FarmTab:CreateToggle({
+    Name = "Auto Farm Level [Active]",
+    CurrentValue = false,
+    Flag = "AutoFarmLevel",
+    Callback = function(Value)
+        _G.AutoFarmLevel = Value
+        if Value then
+            StatusLabel:Set({Title = "Current Task:", Content = "Farming Levels..."})
+            if FarmModule then FarmModule.StartLevelFarm(Value) end
+        else
+            StatusLabel:Set({Title = "Current Task:", Content = "Idle"})
+        end
+    end,
+})
+
+FarmTab:CreateSection("Mob Settings")
+
+-- Função de Agrupar Mobs (Visual clássico do Redz/Tsuo)
+FarmTab:CreateToggle({
+    Name = "Bring Mobs (Fast Farm)",
+    CurrentValue = true,
+    Callback = function(Value)
+        _G.BringMobs = Value
+    end,
+})
+
+-- Função de Bater Escondido
+FarmTab:CreateToggle({
+    Name = "Auto Clicker / Attack",
+    CurrentValue = true,
+    Callback = function(Value)
+        _G.AutoClick = Value
+    end,
+})
+
+
 FarmTab:CreateToggle({
     Name = "Ativar Fast Attack",
     CurrentValue = false,
