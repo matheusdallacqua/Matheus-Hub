@@ -168,6 +168,17 @@ FruitTab:CreateToggle({
     end,
 })
 
+-- Bring Fruit FruitTab
+FruitTab:CreateToggle({
+    Name = "Bring All Fruits (Exploit)",
+    CurrentValue = false,
+    Flag = "BringFruits",
+    Callback = function(Value)
+        FruitsModule.BringFruits(Value)
+    end,
+})
+
+
 -- Corrigido: Agora chama FruitsModule.AutoStoreFruit
 FruitTab:CreateToggle({
     Name = "Auto Store Fruit",
