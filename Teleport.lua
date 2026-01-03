@@ -88,3 +88,37 @@ end
 
 return TeleportModule
 
+
+
+local TeleportModule = {}
+
+-- [Mantenha suas coordenadas aqui em cima...]
+
+-- FUNÇÃO AUTO FRUIT EXTRAÍDA DO TSUO
+function TeleportModule.AutoCollectFruit(state)
+    _G.Auto_Collect_Fruit = state
+    
+    spawn(function()
+        while _G.Auto_Collect_Fruit do
+            task.wait(0.1) -- Loop rápido para não perder o spawn
+            for i, v in pairs(game.Workspace:GetChildren()) do
+                -- Lógica do Tsuo: Verifica se é uma Tool e se tem "Fruit" no nome
+                if v:IsA("Tool") and (string.find(v.Name, "Fruit") or string.find(v.Name, "Fruta")) then
+                    local handle = v:FindFirstChild("Handle")
+                    if handle then
+                        local root = game.Players.LocalPlayer.Character.HumanoidRootPart
+                        -- Teleporta exatamente para a posição da fruta
+                        root.CFrame = handle.CFrame
+                        -- Simula o toque (essencial do opensource)
+                        firetouchinterest(root, handle, 0)
+                        firetouchinterest(root, handle, 1)
+                        task.wait(0.5)
+                    end
+                end
+            end
+        end
+    end)
+end
+
+-- [Mantenha sua função TeleportModule.ToPos aqui embaixo...]
+return TeleportModule
