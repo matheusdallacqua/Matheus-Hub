@@ -72,7 +72,92 @@ FarmConfigTab:AddDropdown({
 	end    
 })
 
--- O Loop exato do Opensource do Tsuo para converter o Delay
+-- [[ MATHEUS HUB - ULTRA COMPLEX MAIN VERSION 2026 ]]
+-- Powered by Matheus & OpenSource Community
+
+-- === 1. CARREGAMENTO DA INTERFACE (RAYFIELD) ===
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- === 2. LINKS DO REPOSITÓRIO GITHUB ===
+local URLS = {
+    Teleport = "https://raw.githubusercontent.com/matheusdallacqua/Matheus-Hub/refs/heads/main/Teleport.lua",
+    Visual   = "https://raw.githubusercontent.com/matheusdallacqua/Matheus-Hub/refs/heads/main/Visual.lua",
+    Fruits   = "https://raw.githubusercontent.com/matheusdallacqua/Matheus-Hub/refs/heads/main/Fruits.lua",
+    Farm     = "https://raw.githubusercontent.com/matheusdallacqua/Matheus-Hub/refs/heads/main/Farm.lua",
+}
+
+-- === 3. CARREGAMENTO SEGURO DOS MÓDULOS ===
+local function GetModule(url)
+    local success, result = pcall(function() return loadstring(game:HttpGet(url))() end)
+    if success then return result else return nil end
+end
+
+local TeleportModule = GetModule(URLS.Teleport)
+local VisualsModule  = GetModule(URLS.Visual)
+local FruitsModule   = GetModule(URLS.Fruits)
+local FarmModule     = GetModule(URLS.Farm)
+
+-- === 4. DETECÇÃO DE DADOS DO JOGADOR ===
+local PlaceID = game.PlaceId
+local Player = game.Players.LocalPlayer
+local CurrentSea = "Sea 1"
+
+if PlaceID == 2753915549 then CurrentSea = "Sea 1"
+elseif PlaceID == 4442272183 or PlaceID == 4442245441 then CurrentSea = "Sea 2"
+elseif PlaceID == 7449423635 then CurrentSea = "Sea 3" end
+
+local Select_World_Sea = CurrentSea
+local Select_Island_Travelling = ""
+
+local IslandNames = {
+    ["Sea 1"] = {"Starter Island", "Jungle", "Desert", "Middle Town", "Frozen Village", "Marineford", "Skypiea", "Prison", "Magma Village", "Fountain City"},
+    ["Sea 2"] = {"Cafe", "Kingdom of Rose", "Green Zone", "Graveyard", "Snow Mountain", "Hot and Cold", "Cursed Ship", "Ice Castle", "Forgotten Island", "Dark Arena"},
+    ["Sea 3"] = {"Mansion", "Port Town", "Hydra Island", "Floating Turtle", "Castle on the Sea", "Haunted Castle", "Sea of Treats", "Tiki Outpost"}
+}
+
+-- === 5. CRIAÇÃO DA JANELA PRINCIPAL ===
+local Window = Rayfield:CreateWindow({
+   Name = "Matheus Hub | V2 Ultra Complex",
+   LoadingTitle = "Iniciando Matheus Hub...",
+   LoadingSubtitle = "by Matheus (2026 Edition)",
+   ConfigurationSaving = { Enabled = true, FolderName = "MatheusHub", FileName = "MainConfig" },
+   KeySystem = false
+})
+
+-- ==========================================
+-- ABA 1: FARM (BOTÕES PRINCIPAIS)
+-- ==========================================
+local FarmTab = Window:CreateTab("Farm", 4483362458)
+
+FarmTab:CreateSection("Auto Farm")
+
+FarmTab:CreateToggle({
+    Name = "Ativar Fast Attack",
+    CurrentValue = false,
+    Callback = function(Value)
+        _G.FastAttack = Value
+        if FarmModule then FarmModule.FastAttack(Value) end
+    end,
+})
+
+-- ==========================================
+-- ABA 2: FARM CONFIG (SUBSTITUÍDO PELO SEU CÓDIGO)
+-- ==========================================
+local FarmConfigTab = Window:CreateTab("Farm Config", 4483362458)
+
+-- Bloco FastAttack Delay que você enviou
+local AttackList = {"0", "0.1", "0.175", "0.2", "0.25", "0.3", "0.35", "0.4", "0.45", "0.5", "0.55", "0.6", "0.65", "0.7", "0.75", "0.8", "0.85", "0.9", "0.95", "1"}
+FarmConfigTab:CreateDropdown({
+	Name = "FastAttack Delay",
+	Options = AttackList,
+    CurrentOption = {"0.5"},
+    Flag = "FastAttack Delay",
+    Save = true,
+	Callback = function(Value)
+		_G.FastAttackDelay = Value[1]
+	end    
+})
+
 spawn(function()
     while wait(.1) do
         if _G.FastAttackDelay then
@@ -92,7 +177,7 @@ spawn(function()
                 elseif _G.FastAttackDelay == "0.35" then
                     _G.FastAttackDelay = 0.35
                 elseif _G.FastAttackDelay == "0.4" then
-                    _G.FastAttackDelay = 0.4 -- Corrigido para 0.4
+                    _G.FastAttackDelay = 0.4 
                 elseif _G.FastAttackDelay == "0.45" then
                     _G.FastAttackDelay = 0.45
                 elseif _G.FastAttackDelay == "0.5" then
@@ -122,72 +207,114 @@ spawn(function()
         end
     end
 end)
+
+-- Bloco Select Weapon que você enviou
+FarmConfigTab:CreateSection("Weapon Settings")
+
+local WeaponList = {"Melee","Sword","Fruit","Gun"}
+_G.SelectWeapon = "Melee"
+
+FarmConfigTab:CreateDropdown({
+    Name = "Select Weapon",
+    Options = WeaponList,
+    CurrentOption = {"Melee"},
+    Flag = "Select Weapon",
+    Save = true,
+    Callback = function(Value)
+        _G.SelectWeapon = Value[1]
+    end    
 })
 
+-- O "cérebro" das armas (pode ficar aqui ou no Farm.lua, deixei aqui para funcionar direto)
+task.spawn(function()
+    while wait() do
+        pcall(function()
+            if _G.SelectWeapon == "Melee" then
+                for i ,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+                    if v.ToolTip == "Melee" then
+                        if game.Players.LocalPlayer.Backpack:FindFirstChild(tostring(v.Name)) then
+                            _G.SelectWeapon = v.Name
+                        end
+                    end
+                end
+            elseif _G.SelectWeapon == "Sword" then
+                for i ,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+                    if v.ToolTip == "Sword" then
+                        if game.Players.LocalPlayer.Backpack:FindFirstChild(tostring(v.Name)) then
+                            _G.SelectWeapon = v.Name
+                        end
+                    end
+                end
+            elseif _G.SelectWeapon == "Gun" then
+                for i ,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+                    if v.ToolTip == "Gun" then
+                        if game.Players.LocalPlayer.Backpack:FindFirstChild(tostring(v.Name)) then
+                            _G.SelectWeapon = v.Name
+                        end
+                    end
+                end
+            elseif _G.SelectWeapon == "Fruit" then
+                for i ,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+                    if v.ToolTip == "Blox Fruit" then
+                        if game.Players.LocalPlayer.Backpack:FindFirstChild(tostring(v.Name)) then
+                            _G.SelectWeapon = v.Name
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end)
+
 -- ==========================================
--- ABA 1: TELEPORT (PROFISSIONAL)
+-- ABA 3: TELEPORT (PROFISSIONAL)
 -- ==========================================
 local TeleportTab = Window:CreateTab("Teleport", 4483362458)
 
-TeleportTab:CreateSection("World Travel (Fast Travel)")
+TeleportTab:CreateSection("World Travel")
 
 TeleportTab:CreateButton({
-    Name = "Travel Sea 1 (Old World)",
+    Name = "Travel Sea 1",
     Callback = function() game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelMain") end,
 })
 
 TeleportTab:CreateButton({
-    Name = "Travel Sea 2 (New World)",
+    Name = "Travel Sea 2",
     Callback = function() game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelDressrosa") end,
 })
 
 TeleportTab:CreateButton({
-    Name = "Travel Sea 3 (New World)",
+    Name = "Travel Sea 3",
     Callback = function() game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelZou") end,
 })
 
-TeleportTab:CreateSection("Island Teleport Settings")
+-- ... [O resto do código de Visuals, Fruits e Config permanece o mesmo abaixo] ...
+-- O Loop exato do Opensource do Tsuo para converter o Delay
+spawn(function()
+    while wait(.1) do
+        if _G.FastAttackDelay then
+            pcall(function()
+                if _G.FastAttackDelay == "0" then
+                    _G.FastAttackDelay = 0
+                elseif _G.FastAttackDelay == "0.1" then
+                    _G.FastAttackDelay = 0.1
+                elseif _G.FastAttackDelay == "0.175" then
+                    _G.FastAttackDelay = 0.175
+                elseif _G.FastAttackDelay == "0.2" then
+                    _G.FastAttackDelay = 0.2
+                elseif _G.FastAttackDelay == "0.25" then
+                    _G.FastAttackDelay = 0.25
+                elseif _G.FastAttackDelay == "0.3" then
+                    _G.FastAttackDelay = 0.3
+                elseif _G.FastAttackDelay == "0.35" then
+                    _G.FastAttackDelay = 0.35
+                elseif _G.FastAttackDelay == "0.4" then
+                    _G.FastAttackDelay = 0.4 -- Corrigido para 0.4
+                elseif _G.FastAttackDelay == "0.45" then
+                    _G.FastAttackDelay = 0.45
+                elseif _G.FastAttackDelay == "0.5" then
+                    _G.FastAttackDelay = 0.5
 
-TeleportTab:CreateDropdown({
-    Name = "Select Sea Target",
-    Options = {"Sea 1", "Sea 2", "Sea 3"},
-    CurrentOption = {CurrentSea},
-    Flag = "SeaSelectionFlag",
-    Callback = function(Option)
-        Select_World_Sea = Option[1]
-        Rayfield.Flags["IslandSelectionFlag"]:Set(IslandNames[Select_World_Sea])
-    end,
-})
-
-TeleportTab:CreateDropdown({
-    Name = "Select Target Island",
-    Options = IslandNames[CurrentSea],
-    CurrentOption = {""},
-    Flag = "IslandSelectionFlag",
-    Callback = function(Option)
-        Select_Island_Travelling = Option[1]
-    end,
-})
-
-TeleportTab:CreateToggle({
-    Name = "Active Auto Teleport (Tween Mode)",
-    CurrentValue = false,
-    Flag = "TPToggleFlag",
-    Callback = function(Value)
-        _G.Teleporting = Value
-        if Value then
-            if Select_Island_Travelling ~= "" and TeleportModule then
-                local target = TeleportModule.Islands[Select_World_Sea][Select_Island_Travelling]
-                if target then TeleportModule.ToPos(target, true) end
-            else
-                Rayfield:Notify({Title = "Error", Content = "Select an Island First!", Duration = 3})
-                Rayfield.Flags["TPToggleFlag"]:Set(false)
-            end
-        else
-            if TeleportModule then TeleportModule.ToPos(nil, false) end
-        end
-    end,
-})
 
 -- ==========================================
 -- ABA 2: VISUALS (ESP & INFO)
