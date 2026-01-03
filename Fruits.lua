@@ -6,23 +6,55 @@ local Remote = game:GetService("ReplicatedStorage").Remotes.CommF_
 local Player = game.Players.LocalPlayer
 
 -- [[ 1. BLOX FRUIT GACHA (GIRO REAL) ]]
--- [[ BLOX FRUIT GACHA REAL - OPENSOURCE 2026 ]]
+--- [[ 1. O GACHA QUE FUNCIONA (TELEPORT + MULTI-REMOTE) ]]
 function FruitModule.BuyGacha()
-    -- Este é o Remote que o NPC oficial usa agora para girar frutas aleatórias
-    local success, result = pcall(function()
-        return game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BloxFruitGacha", "Roll")
-    end)
+    local character = Player.Character
+    local root = character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
     
-    if success then
-        task.wait(1.5) -- Espera a fruta aparecer na mochila
-        -- Auto Store após girar
-        for _, item in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-            if item.Name:find("Fruit") or item.Name:find("Fruta") then
-                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", item.Name, item)
-            end
+    local oldPos = root.CFrame -- Guarda a tua posição para voltar depois
+    
+    -- Busca o NPC em qualquer Sea (Selva, Café ou Mansão)
+    local gachaNPC = nil
+    for _, v in pairs(game:GetService("Workspace").NPCs:GetDescendants()) do
+        if v.Name == "Blox Fruit Gacha" or v.Name == "Cousin" then
+            gachaNPC = v
+            break
         end
     end
-    return result
+
+    if gachaNPC then
+        -- Teleporte instantâneo para o NPC (Bypass de distância)
+        root.CFrame = gachaNPC:GetModelCFrame()
+        task.wait(0.3) -- Tempo para o servidor processar a tua chegada
+        
+        -- Tenta todos os Remotes conhecidos até hoje
+        local methods = {"BloxFruitGacha", "Cousin"}
+        for _, method in pairs(methods) do
+            pcall(function()
+                Remote:InvokeServer(method, "Roll")
+                Remote:InvokeServer(method, "BuyItem")
+            end)
+        end
+        
+        task.wait(0.2)
+        root.CFrame = oldPos -- Volta-te para onde estavas
+        
+        -- Auto Store (Tenta guardar 3 vezes para garantir com o teu lag)
+        task.spawn(function()
+            for i = 1, 3 do
+                task.wait(1)
+                for _, item in pairs(Player.Backpack:GetChildren()) do
+                    if item.Name:find("Fruit") or item.Name:find("Fruta") then
+                        Remote:InvokeServer("StoreFruit", item.Name, item)
+                    end
+                end
+            end
+        end)
+    else
+        -- Se não encontrar o NPC físico, tenta o Remote direto por segurança
+        pcall(function() Remote:InvokeServer("BloxFruitGacha", "Roll") end)
+    end
 end
 
 -- [[ 2. AUTO COLLECT (MODO TWEEN - ANTI BAN) ]]
