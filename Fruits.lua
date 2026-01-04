@@ -1,114 +1,35 @@
--- [[ PASTA: Fruits.lua - MATHEUS HUB COMPLEX EDITION ]]
-local FruitModule = {}
+--- [[ FRUITS.LUA - MATHEUS HUB ]]
+local FruitsModule = {}
 
--- [[ CONFIGURAÇÕES INTERNAS ]]
-local Remote = game:GetService("ReplicatedStorage").Remotes.CommF_
-local Player = game.Players.LocalPlayer
-
--- [[ 1. BLOX FRUIT GACHA
+-- FUNÇÃO GACHA (O QUE VOCÊ PEGOU ANTES)
 function FruitsModule.BuyGacha()
     pcall(function()
-        -- O comando NOVO que você pegou
         game:GetService("ReplicatedStorage").Modules.Net["RF/GachaUtilRF"]:InvokeServer({
             ["Context"] = "getGachaFromBoxName",
             ["BoxName"] = "SummerWeek5Gacha"
         })
-        -- Mantém o antigo por segurança (Híbrido)
-        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("Cousin","Buy")
     end)
 end
 
-
-    -- Auto Store (Garante que guarda o que girou)
-    task.spawn(function()
-        task.wait(1.5)
-        local character = Player.Character
-        local backpack = Player.Backpack
-        
-        for _, item in pairs(backpack:GetChildren()) do
-            if item:IsA("Tool") and (item.Name:find("Fruit") or item:GetAttribute("Fruit")) then
-                Remote:InvokeServer("StoreFruit", item.Name, item)
+-- FUNÇÃO STORE (O QUE VOCÊ PEGOU AGORA)
+function FruitsModule.AutoStore()
+    pcall(function()
+        -- Procura na mochila (Backpack)
+        for _, v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+            if v:IsA("Tool") and (v:GetAttribute("Fruit") or v.Name:find("Fruit")) then
+                local fruitName = v:GetAttribute("FruitName") or v.Name:split("-")[1] or v.Name
+                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", fruitName, v)
             end
         end
-        if character then
-            for _, item in pairs(character:GetChildren()) do
-                if item:IsA("Tool") and (item.Name:find("Fruit") or item:GetAttribute("Fruit")) then
-                    Remote:InvokeServer("StoreFruit", item.Name, item)
-                end
+        -- Procura no personagem (Character - mão)
+        for _, v in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
+            if v:IsA("Tool") and (v:GetAttribute("Fruit") or v.Name:find("Fruit")) then
+                local fruitName = v:GetAttribute("FruitName") or v.Name:split("-")[1] or v.Name
+                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", fruitName, v)
             end
         end
     end)
 end
 
--- [[ 2. AUTO COLLECT (MÉTODO TWEEN/TP) ]]
-function FruitModule.AutoCollectFruit(state)
-    _G.Auto_Collect_Fruit = state
-    task.spawn(function()
-        while _G.Auto_Collect_Fruit do
-            task.wait(0.1)
-            pcall(function()
-                for _, v in pairs(game.Workspace:GetChildren()) do
-                    if v:IsA("Tool") and (v.Name:find("Fruit") or v:GetAttribute("Fruit")) then
-                        local handle = v:FindFirstChild("Handle") or v:FindFirstChildWhichIsA("BasePart")
-                        if handle then
-                            local root = Player.Character.HumanoidRootPart
-                            root.CFrame = handle.CFrame
-                            task.wait(0.2)
-                            firetouchinterest(root, handle, 0)
-                            firetouchinterest(root, handle, 1)
-                        end
-                    end
-                end
-            end)
-        end
-    end)
-end
+return FruitsModule
 
--- [[ 3. BRING FRUITS (TRAZER PARA SI) ]]
-function FruitModule.BringFruits(state)
-    _G.BringFruits = state
-    task.spawn(function()
-        while _G.BringFruits do
-            task.wait(0.5)
-            pcall(function()
-                for _, v in pairs(game.Workspace:GetChildren()) do
-                    if v:IsA("Tool") and (v.Name:find("Fruit") or v:GetAttribute("Fruit")) then
-                        local handle = v:FindFirstChild("Handle") or v:FindFirstChildWhichIsA("BasePart")
-                        if handle then
-                            handle.CFrame = Player.Character.HumanoidRootPart.CFrame
-                            handle.CanCollide = false
-                        end
-                    end
-                end
-            end)
-        end
-    end)
-end
-
--- [[ 4. AUTO STORE (MÉTODO DEFINITIVO) ]]
-function FruitModule.AutoStoreFruit(state)
-    _G.AutoStore = state
-    if not state then return end
-    
-    task.spawn(function()
-        while _G.AutoStore do
-            pcall(function()
-                for _, item in pairs(Player.Backpack:GetChildren()) do
-                    if item:IsA("Tool") and (item.Name:find("Fruit") or item:GetAttribute("Fruit")) then
-                        Remote:InvokeServer("StoreFruit", item.Name, item)
-                    end
-                end
-                if Player.Character then
-                    for _, item in pairs(Player.Character:GetChildren()) do
-                        if item:IsA("Tool") and (item.Name:find("Fruit") or item:GetAttribute("Fruit")) then
-                            Remote:InvokeServer("StoreFruit", item.Name, item)
-                        end
-                    end
-                end
-            end)
-            task.wait(2)
-        end
-    end)
-end
-
-return FruitModule
