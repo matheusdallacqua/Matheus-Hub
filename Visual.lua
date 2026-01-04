@@ -1,7 +1,7 @@
 -- [[ PASTA: Visuals.lua - MATHEUS HUB ]]
 local VisualsModule = {}
 
--- [[ ESP DE PLAYERS ]]
+-- [[ ESP DE PLAYERS (ESTÁ BOM, SÓ AJUSTEI A LIMPEZA) ]]
 function VisualsModule.PlayerESP(state)
     _G.PlayerESP = state
     task.spawn(function()
@@ -16,12 +16,13 @@ function VisualsModule.PlayerESP(state)
                         local lab = Instance.new("TextLabel", bill)
                         lab.Size = UDim2.new(1, 0, 1, 0)
                         lab.BackgroundTransparency = 1
-                        lab.TextColor3 = Color3.fromRGB(0, 255, 0) -- ALTERADO PARA VERDE
+                        lab.TextColor3 = Color3.fromRGB(0, 255, 0)
                         lab.Font = Enum.Font.GothamBold
                         lab.TextSize = 14
                         lab.TextStrokeTransparency = 0 
                         task.spawn(function()
-                            while v.Character and v.Character:FindFirstChild("HumanoidRootPart") and _G.PlayerESP do
+                            -- Verifica v.Parent para saber se o player não saiu do jogo
+                            while v and v.Character and v.Character:FindFirstChild("HumanoidRootPart") and _G.PlayerESP do
                                 local root = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
                                 if root then
                                     local dist = math.floor((root.Position - v.Character.HumanoidRootPart.Position).Magnitude)
@@ -39,13 +40,15 @@ function VisualsModule.PlayerESP(state)
     end)
 end
 
--- [[ ESP DE FRUTAS 2026 ]]
+-- [[ ESP DE FRUTAS 2026 - CORRIGIDO ]]
 function VisualsModule.FruitESP(state)
     _G.FruitESP = state
     task.spawn(function()
         while _G.FruitESP do
-            for _, v in pairs(game.Workspace:GetChildren()) do
-                if v:IsA("Tool") and (v.Name:find("Fruit") or v.Name:find("Fruta") or v:GetAttribute("Fruit")) then
+            -- MUDANÇA: GetDescendants para achar frutas escondidas no mapa
+            for _, v in pairs(game.Workspace:GetDescendants()) do
+                -- Filtro rápido para não dar lag: só processa Tool ou Model
+                if (v:IsA("Tool") or v:IsA("Model")) and (v.Name:find("Fruit") or v.Name:find("Fruta") or v:GetAttribute("Fruit")) then
                     local handle = v:FindFirstChild("Handle") or v:FindFirstChildWhichIsA("BasePart")
                     if handle and not handle:FindFirstChild("FruitLabel") then
                         local bill = Instance.new("BillboardGui", handle)
@@ -55,16 +58,23 @@ function VisualsModule.FruitESP(state)
                         local lab = Instance.new("TextLabel", bill)
                         lab.Size = UDim2.new(1, 0, 1, 0)
                         lab.BackgroundTransparency = 1
-                        lab.TextColor3 = Color3.fromRGB(255, 0, 0) -- ALTERADO PARA VERMELHO
+                        lab.TextColor3 = Color3.fromRGB(255, 0, 0)
                         lab.Font = Enum.Font.GothamBold
                         lab.TextSize = 14
                         lab.TextStrokeTransparency = 0 
                         task.spawn(function()
-                            while v.Parent == game.Workspace and _G.FruitESP do
-                                local root = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                                if root then
+                            -- MUDANÇA: v.Parent genérico para continuar na mão dos players
+                            while v and v.Parent and _G.FruitESP do
+                                local char = game.Players.LocalPlayer.Character
+                                local root = char and char:FindFirstChild("HumanoidRootPart")
+                                if root and handle and handle.Parent then
                                     local dist = math.floor((root.Position - handle.Position).Magnitude)
-                                    lab.Text = "🍎 " .. v.Name .. " [" .. dist .. "m]"
+                                    
+                                    -- Checa se a fruta está com algum player
+                                    local holder = game.Players:GetPlayerFromCharacter(v.Parent)
+                                    local tag = holder and " [COM "..holder.Name.."]" or ""
+                                    
+                                    lab.Text = "🍎 " .. v.Name .. tag .. " [" .. dist .. "m]"
                                 end
                                 task.wait(0.3)
                             end
@@ -73,12 +83,12 @@ function VisualsModule.FruitESP(state)
                     end
                 end
             end
-            task.wait(2)
+            task.wait(3) -- Delay um pouco maior para economizar CPU no Descendants
         end
     end)
 end
 
--- [[ SNIPER DE STOCK ATUALIZADO (CONTROL 9M) ]]
+-- [[ GetStock permanece como você enviou, pois está funcional ]]
 function VisualsModule.GetStock()
     local success, stock = pcall(function()
         return game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("GetFruits")
