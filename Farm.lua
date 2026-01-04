@@ -83,6 +83,35 @@ function FarmModule.EquipWeapon()
         end
     end)
 end
+-- Loop para identificar a arma selecionada (Melee, Sword, etc)
+task.spawn(function()
+    while task.wait(0.5) do
+        pcall(function()
+            if _G.AutoFarmLevel then
+                local weaponType = _G.SelectWeapon or "Melee"
+                if weaponType == "Fruit" then weaponType = "Blox Fruit" end
+                
+                for _, v in pairs(Player.Backpack:GetChildren()) do
+                    if v.ToolTip == weaponType then
+                        _G.CurrentEquipName = v.Name
+                        break
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+function FarmModule.EquipWeapon()
+    pcall(function()
+        if _G.CurrentEquipName then
+            local tool = Player.Backpack:FindFirstChild(_G.CurrentEquipName)
+            if tool then
+                Player.Character.Humanoid:EquipTool(tool)
+            end
+        end
+    end)
+end
 
 -- [[ 6. LOOP DE FARM ]]
 function FarmModule.StartLevelFarm(Toggle)
