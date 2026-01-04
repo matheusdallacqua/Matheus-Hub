@@ -51,12 +51,12 @@ local Window = Rayfield:CreateWindow({
 })
 
 -- ==========================================
--- ABA 1: FARM (BOTÃ•ES PRINCIPAIS)
+-- ABA 1: HOME (Ajustado para não bugar com a FarmTab)
 -- ==========================================
-local FarmTab = Window:CreateTab("Home", 4483362458)
+local HomeTab = Window:CreateTab("Home", 4483362458)
 
 -- ==========================================
--- ABA 1: FARM (VISUAL OPENSOURCE STYLE)
+-- ABA 2: FARM (VISUAL OPENSOURCE STYLE)
 -- ==========================================
 local FarmTab = Window:CreateTab("Auto Farm", 4483362458)
 
@@ -95,7 +95,7 @@ FarmTab:CreateToggle({
 
 
 -- ==========================================
--- ABA 2: FARM CONFIG
+-- ABA 3: FARM CONFIG
 -- ==========================================
 local FarmConfigTab = Window:CreateTab("Farm Config", 4483362458)
 
@@ -265,7 +265,7 @@ task.spawn(function()
 end)
 
 -- ==========================================
--- ABA 3: TELEPORT (PROFISSIONAL)
+-- ABA 4: TELEPORT (PROFISSIONAL)
 local function CreateSeaDropdown(seaName, tabTitle)
     local Tab = Window:CreateTab(tabTitle, 4483362458)
     local OptionsList = {}
@@ -303,7 +303,7 @@ CreateSeaDropdown("Sea 2", "Sea 2 TP")
 CreateSeaDropdown("Sea 3", "Sea 3 TP")
 
 -- ==========================================
--- ABA 2: VISUALS (ESP & INFO)
+-- ABA 5: VISUALS (ESP & INFO)
 -- ==========================================
 local VisualTab = Window:CreateTab("Visuals", 4483362458)
 VisualTab:CreateSection("ESP Settings")
@@ -319,7 +319,7 @@ VisualTab:CreateToggle({
 })
 
 -- ==========================================
--- ABA 3: DEVIL FRUIT (MANAGER)
+-- ABA 6: DEVIL FRUIT (MANAGER)
 -- ==========================================
 local FruitTab = Window:CreateTab("Devil Fruit", 4483362458)
 FruitTab:CreateSection("Automated Fruit Management")
@@ -358,7 +358,7 @@ FruitTab:CreateToggle({
 })
 
 -- ==========================================
--- ABA 4: CONFIG & CREDITS
+-- ABA 7: CONFIG & CREDITS
 -- ==========================================
 local ConfigTab = Window:CreateTab("Config", 4483362458)
 ConfigTab:CreateSection("Server Utils")
@@ -379,3 +379,4 @@ end)
 
 Rayfield:LoadConfiguration()
 Rayfield:Notify({Title = "team Morena do cabelo liso", Content = "Blox Fruit- Matheus Hub", Duration = 5})
+
