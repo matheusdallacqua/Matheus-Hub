@@ -2,7 +2,7 @@ local FarmModule = {}
 local Player = game.Players.LocalPlayer
 local TweenService = game:GetService("TweenService")
 
--- [[ 1. TABELA DE QUESTS - SEA 1 COMPLETA ]]
+-- [[ 1. TABELA DE QUESTS ]]
 local QuestData = {
     ["Sea 1"] = {
         {Level = 0, Name = "Bandit", QuestName = "BanditQuest1", QuestID = 1, NPC_Pos = CFrame.new(1060, 16, 1547), Mob_Pos = CFrame.new(1145, 17, 1634)},
@@ -32,7 +32,7 @@ local QuestData = {
     }
 }
 
--- [[ 2. TWEEN DE MOVIMENTAÇÃO ]]
+-- [[ 2. TWEEN ]]
 local function SmoothTween(TargetCFrame)
     local Character = Player.Character
     if not Character or not Character:FindFirstChild("HumanoidRootPart") then return end
@@ -45,95 +45,59 @@ local function SmoothTween(TargetCFrame)
     tween.Completed:Wait()
 end
 
--- [[ 3. BRING MOBS (HOHO STYLE - NO CHÃO) ]]
+-- [[ 3. BRING MOBS ]]
 local function BringMobs(TargetMob)
     pcall(function()
         local TargetPos = TargetMob.HumanoidRootPart.CFrame
         for _, v in pairs(game.Workspace.Enemies:GetChildren()) do
             if string.find(v.Name, TargetMob.Name) and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
-                if (v.HumanoidRootPart.Position - Player.Character.HumanoidRootPart.Position).Magnitude < 300 then
-                    v.HumanoidRootPart.CanCollide = false
-                    v.HumanoidRootPart.CFrame = TargetPos -- Fixa no chão
-                    v.Humanoid.WalkSpeed = 0
-                    if v.Humanoid:GetState() ~= Enum.HumanoidStateType.Physics then
-                        v.Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
-                    end
-                end
+                v.HumanoidRootPart.CanCollide = false
+                v.HumanoidRootPart.CFrame = TargetPos
             end
         end
     end)
 end
 
-
-
--- [[ 5. SISTEMA DE EQUIPE COMPLETO (TRADUTOR + EQUIPER) ]]
-
--- 5a. TRADUTOR (O código que você achou, otimizado)
-task.spawn(function()
-    while task.wait(0.5) do
-        pcall(function()
-            if _G.AutoFarmLevel then
-                -- Se o usuário selecionou uma categoria, este loop acha o nome real da arma
-                local category = _G.SelectWeaponType or "Melee" -- "Melee", "Sword", "Gun", "Fruit"
-                local toolTipTarget = (category == "Fruit" and "Blox Fruit" or category)
-
-                for _, v in pairs(Player.Backpack:GetChildren()) do
-                    if v.ToolTip == toolTipTarget then
-                        _G.RealWeaponName = v.Name -- Salva o nome real (ex: "Co-- [[ 4a. MOTOR DE AUTO CLICK (VERSÃO 100% IGUAL AO TXT / MOBILE) ]]
+-- [[ 4. AUTO CLICK (TXT OPENSOURCE) ]]
 function FarmModule.StartAutoClick(Toggle)
-    _G.AutoClick = Toggle -- Nome corrigido para bater com a Main
-    local VirtualUser = game:GetService("VirtualUser")
-    local RunService = game:GetService("RunService")
-
+    _G.AutoClick = Toggle
+    if _G.ClickAlreadyStarted then return end -- Evita duplicar o loop
+    _G.ClickAlreadyStarted = true
+    
     task.spawn(function()
-        -- Conecta ao RenderStepped (Velocidade do TXT)
-        local Connection
-        Connection = RunService.RenderStepped:Connect(function()
+        game:GetService("RunService").RenderStepped:Connect(function()
             if _G.AutoClick then
                 pcall(function()
                     if Player.Character:FindFirstChildOfClass("Tool") then
-                        VirtualUser:CaptureController()
-                        -- Coordenada exata do seu TXT para Mobile
-                        VirtualUser:Button1Down(Vector2.new(0,1,0,1))
+                        game:GetService('VirtualUser'):CaptureController()
+                        game:GetService('VirtualUser'):Button1Down(Vector2.new(0,1,0,1))
                     end
                 end)
-            else
-                -- Desconecta para não dar lag quando desligar
-                if Connection then Connection:Disconnect() end
             end
         end)
     end)
-                                endmbat")
-                        break
-                    end
-                end
-            end
-        end)
-    end
-end)
+end
 
--- 5b. FUNÇÃO QUE REALMENTE COLOCA NA MÃO
+-- [[ 5. SISTEMA DE ARMAS ]]
 function FarmModule.EquipWeapon()
     pcall(function()
-        if _G.RealWeaponName then
-            local tool = Player.Backpack:FindFirstChild(_G.RealWeaponName)
-            local toolInHand = Player.Character:FindFirstChild(_G.RealWeaponName)
-            
-            -- Só equipa se não estiver na mão
-            if tool and not toolInHand then
+        -- Pega o nome real que o loop da sua Main.lua encontrou
+        local weapon = _G.SelectWeapon 
+        if weapon then
+            local tool = Player.Backpack:FindFirstChild(weapon)
+            if tool then
                 Player.Character.Humanoid:EquipTool(tool)
             end
         end
     end)
 end
 
-
--- [[ 6. LOOP DE FARM CORRIGIDO ]]
+-- [[ 6. LOOP DE FARM ]]
 function FarmModule.StartLevelFarm(Toggle)
     _G.AutoFarmLevel = Toggle
     task.spawn(function()
         while _G.AutoFarmLevel do
-            task.wait()
+            task.wait(0.1)
             pcall(function()
                 local myLevel = Player.Data.Level.Value
                 local data = nil
@@ -144,24 +108,17 @@ function FarmModule.StartLevelFarm(Toggle)
                 if data then
                     local hasQuest = Player.PlayerGui.Main:FindFirstChild("Quest") and Player.PlayerGui.Main.Quest.Visible
                     if not hasQuest then
-                        -- Se for pegar quest, desliga o clique para não bugar o NPC
                         _G.AutoClick = false
                         SmoothTween(data.NPC_Pos)
                         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", data.QuestName, data.QuestID)
                     else
                         local Enemy = game.Workspace.Enemies:FindFirstChild(data.Name)
                         if Enemy and Enemy:FindFirstChild("HumanoidRootPart") and Enemy.Humanoid.Health > 0 then
-                            
-                            -- LIGA O CLIQUE QUANDO CHEGA NO INIMIGO
-                            if not _G.AutoClick then 
-                                FarmModule.StartAutoClick(true) 
-                            end
-
                             FarmModule.EquipWeapon()
+                            FarmModule.StartAutoClick(true)
                             Player.Character.HumanoidRootPart.CFrame = Enemy.HumanoidRootPart.CFrame * CFrame.new(0, 10, 0)
                             BringMobs(Enemy)
                         else
-                            -- Se estiver procurando o mob, mantém o clique ligado ou vai até o spawn
                             SmoothTween(data.Mob_Pos)
                         end
                     end
@@ -171,4 +128,5 @@ function FarmModule.StartLevelFarm(Toggle)
     end)
 end
 
+return FarmModule
 
