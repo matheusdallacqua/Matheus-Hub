@@ -112,6 +112,7 @@ spawn(function()
     end
 end)
 
+--Dropdown das arma
 FarmConfigTab:CreateSection("Weapon Settings")
 
 local WeaponList = {"Melee","Sword","Fruit","Gun"}
@@ -119,49 +120,38 @@ FarmConfigTab:CreateDropdown({
     Name = "Select Weapon",
     Options = WeaponList,
     CurrentOption = {"Melee"},
-    Callback = function(Value) _G.SelectWeapon = Value[1] end    
+    Callback = function(Value) 
+        -- Mudamos aqui para não bugar o nome real da arma
+        _G.Select_Weapon_Check = Value[1] 
+    end    
 })
 
--- O "cÃ©rebro" das armas
+
+-- O "Cérebro" das Armas - VOLTANDO AO PADRÃO QUE O FARM.LUA EXIGE
 task.spawn(function()
-    while wait() do
+    while wait(1) do
         pcall(function()
-            if _G.SelectWeapon == "Melee" then
-                for i ,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-                    if v.ToolTip == "Melee" then
-                        if game.Players.LocalPlayer.Backpack:FindFirstChild(tostring(v.Name)) then
-                            _G.SelectWeapon = v.Name
-                        end
-                    end
+            -- Esta variável Select_Weapon_Check serve apenas para o Dropdown não bugar
+            local toolType = _G.Select_Weapon_Check or "Melee"
+            local check = toolType == "Fruit" and "Blox Fruit" or toolType
+            
+            -- Procura na Backpack
+            for i ,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+                if v.ToolTip == check then
+                    _G.SelectWeapon = v.Name -- AQUI É O NOME REAL (EX: "COMBAT")
                 end
-            elseif _G.SelectWeapon == "Sword" then
-                for i ,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-                    if v.ToolTip == "Sword" then
-                        if game.Players.LocalPlayer.Backpack:FindFirstChild(tostring(v.Name)) then
-                            _G.SelectWeapon = v.Name
-                        end
-                    end
-                end
-            elseif _G.SelectWeapon == "Gun" then
-                for i ,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-                    if v.ToolTip == "Gun" then
-                        if game.Players.LocalPlayer.Backpack:FindFirstChild(tostring(v.Name)) then
-                            _G.SelectWeapon = v.Name
-                        end
-                    end
-                end
-            elseif _G.SelectWeapon == "Fruit" then
-                for i ,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-                    if v.ToolTip == "Blox Fruit" then
-                        if game.Players.LocalPlayer.Backpack:FindFirstChild(tostring(v.Name)) then
-                            _G.SelectWeapon = v.Name
-                        end
-                    end
+            end
+            
+            -- Procura no Character (caso já esteja na mão)
+            for i ,v in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
+                if v:IsA("Tool") and v.ToolTip == check then
+                    _G.SelectWeapon = v.Name
                 end
             end
         end)
     end
 end)
+
 
 -- ==========================================
 -- ABA 3: TELEPORT (PROFISSIONAL)
@@ -249,7 +239,7 @@ FruitTab:CreateToggle({
             task.spawn(function()
                 while _G.AutoGachaLoop do
                     if FruitsModule then FruitsModule.BuyGacha() end
-                    task.wait(60)
+                    task.wait(1)
                 end
             end)
         end
