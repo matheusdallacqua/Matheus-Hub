@@ -182,11 +182,15 @@ VisualTab:CreateToggle({
     CurrentValue = false,
     Callback = function(Value) if VisualsModule then VisualsModule.PlayerESP(Value) end end,
 })
+
 VisualTab:CreateToggle({
-    Name = "Fruit ESP (Full Tracking)",
+    Name = "Fruit ESP",
     CurrentValue = false,
-    Callback = function(Value) if VisualsModule then VisualsModule.FruitESP(Value) end end,
+    Callback = function(Value)
+        VisualsModule.FruitESP(Value)
+    end,
 })
+
 
 -- ==========================================
 -- ABA 5: DEVIL FRUIT
