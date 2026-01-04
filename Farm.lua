@@ -45,18 +45,29 @@ local function SmoothTween(TargetCFrame)
     tween.Completed:Wait()
 end
 
--- [[ 3. BRING MOBS ]]
-local function BringMobs(TargetMob)
+-- [[ 3. MAGNET (BRING MOBS MELHORADO) ]]
+local function Magnet(TargetMob)
     pcall(function()
-        local TargetPos = TargetMob.HumanoidRootPart.CFrame
+        -- Define o ponto para onde os mobs serão puxados (10 studs abaixo de você)
+        local PullPoint = Player.Character.HumanoidRootPart.CFrame * CFrame.new(0, -10, 0)
+        
         for _, v in pairs(game.Workspace.Enemies:GetChildren()) do
-            if string.find(v.Name, TargetMob.Name) and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
-                v.HumanoidRootPart.CanCollide = false
-                v.HumanoidRootPart.CFrame = TargetPos
+            -- Verifica se o mob tem o mesmo nome do seu alvo e está vivo
+            if v.Name == TargetMob.Name and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+                if v:FindFirstChild("HumanoidRootPart") then
+                    v.HumanoidRootPart.CanCollide = false -- Remove colisão para não bugar
+                    v.HumanoidRootPart.CFrame = PullPoint
+                    
+                    -- Desativa a inteligência do mob para ele não fugir do Magnet
+                    if v.HumanoidRootPart:FindFirstChild("BodyVelocity") then
+                        v.HumanoidRootPart.BodyVelocity:Destroy()
+                    end
+                end
             end
         end
     end)
 end
+
 
 -- [[ 4. AUTO CLICK (TXT OPENSOURCE) ]]
 function FarmModule.StartAutoClick(Toggle)
