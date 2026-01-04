@@ -45,28 +45,39 @@ local function SmoothTween(TargetCFrame)
     tween.Completed:Wait()
 end
 
--- [[ 3. MAGNET (BRING MOBS MELHORADO) ]]
+-- [[ 3. MAGNET (BRING MOBS ULTRA - 2026 EDITION) ]]
 local function Magnet(TargetMob)
+    if not _G.BringMobs or not TargetMob or not TargetMob:FindFirstChild("HumanoidRootPart") then return end
+    
     pcall(function()
-        -- Define o ponto para onde os mobs serão puxados (10 studs abaixo de você)
-        local PullPoint = Player.Character.HumanoidRootPart.CFrame * CFrame.new(0, -10, 0)
+        -- Ponto de agrupamento (Onde todos os mobs vão ficar "presos")
+        local TargetPos = TargetMob.HumanoidRootPart.CFrame
         
         for _, v in pairs(game.Workspace.Enemies:GetChildren()) do
-            -- Verifica se o mob tem o mesmo nome do seu alvo e está vivo
-            if v.Name == TargetMob.Name and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
-                if v:FindFirstChild("HumanoidRootPart") then
-                    v.HumanoidRootPart.CanCollide = false -- Remove colisão para não bugar
-                    v.HumanoidRootPart.CFrame = PullPoint
+            if v.Name == TargetMob.Name and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
+                
+                -- Só puxa se o mob estiver num raio de 250 studs (evita detecção)
+                local dist = (v.HumanoidRootPart.Position - Player.Character.HumanoidRootPart.Position).Magnitude
+                if dist < 250 then
                     
-                    -- Desativa a inteligência do mob para ele não fugir do Magnet
-                    if v.HumanoidRootPart:FindFirstChild("BodyVelocity") then
-                        v.HumanoidRootPart.BodyVelocity:Destroy()
+                    v.HumanoidRootPart.CanCollide = false
+                    
+                    -- Cria uma força para manter o mob parado no alvo (O segredo do Magnet)
+                    if not v.HumanoidRootPart:FindFirstChild("BodyVelocity") then
+                        local bv = Instance.new("BodyVelocity")
+                        bv.Velocity = Vector3.new(0,0,0)
+                        bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+                        bv.Parent = v.HumanoidRootPart
                     end
+                    
+                    -- Teleporta o mob para o centro do grupo
+                    v.HumanoidRootPart.CFrame = TargetPos
                 end
             end
         end
     end)
 end
+
 
 
 -- [[ 4. AUTO CLICK (TXT OPENSOURCE) ]]
