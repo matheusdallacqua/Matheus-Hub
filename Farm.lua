@@ -64,31 +64,26 @@ local function BringMobs(TargetMob)
     end)
 end
 
--- [[ 4. FAST ATTACK (HOHO HUB) ]]
-function FarmModule.FastAttack(Toggle)
-    _G.FastAttack = Toggle
-    local CombatFramework = require(Player.PlayerScripts.CombatFramework)
-    local AttackLogic = debug.getupvalues(CombatFramework.Attack)[1]
-    local VirtualUser = game:GetService("VirtualUser")
+-- Configuração de velocidade (segundos)
+local clickSpeed = 0.1 
+local autoClickEnabled = true
 
-    task.spawn(function()
-        while _G.FastAttack do
-            task.wait(0.01)
-            pcall(function()
-                if Player.Character:FindFirstChildOfClass("Tool") then
-                    if AttackLogic and AttackLogic.activeController then
-                        AttackLogic.activeController.timeToNextAttack = 0
-                        AttackLogic.activeController.attacking = false
-                        AttackLogic.activeController.incrementAttackCounter()
-                        AttackLogic.activeController:attack()
-                        VirtualUser:CaptureController()
-                        VirtualUser:Button1Down(Vector2.new(850, 450), game.Workspace.CurrentCamera.CFrame)
-                    end
-                end
-            end)
+-- Serviço necessário para simular o clique real
+local virtualUser = game:GetService("VirtualUser")
+
+task.spawn(function()
+    while task.wait(clickSpeed) do
+        if autoClickEnabled then
+            -- Simula o clique do botão esquerdo do mouse
+            -- O primeiro parâmetro vazio simula o clique na posição atual do mouse
+            virtualUser:CaptureController()
+            virtualUser:ClickButton1(Vector2.new(0, 0))
         end
-    end)
-end
+    end
+end)
+
+-- Para desligar/ligar via código, basta mudar a variável:
+-- autoClickEnabled = false
 
 -- [[ 5. SISTEMA DE EQUIPE COMPLETO (TRADUTOR + EQUIPER) ]]
 
