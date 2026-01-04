@@ -43,15 +43,15 @@ FarmTab:CreateToggle({
     end,
     })
 
-    -- ==========================================
--- ABA 1: AUTO FARM
+-- ==========================================
+-- ABA 1: AUTO FARM (CORRIGIDA)
 -- ==========================================
 local FarmTab = Window:CreateTab("Auto Farm", 4483362458)
 
 FarmTab:CreateSection("Select Farm Mode")
 
 local FarmModes = {"Level", "Nearest", "Chest", "Bone (Third Sea)"}
-_G.FarmMode = "Level" -- Padrão
+_G.FarmMode = "Level" 
 
 FarmTab:CreateDropdown({
     Name = "Farm Mode",
@@ -67,7 +67,6 @@ FarmTab:CreateToggle({
     CurrentValue = false,
     Callback = function(Value)
         _G.AutoFarm = Value
-        -- Envia para o módulo qual modo foi escolhido
         if FarmModule then 
             FarmModule.StartFarm(Value, _G.FarmMode) 
         end
@@ -84,8 +83,7 @@ FarmTab:CreateToggle({
         _G.AutoClick = Value
         if FarmModule then FarmModule.StartAutoClick(Value) end
     end,
-})
-    
+})    
 -- ==========================================
 -- ABA 2: FARM CONFIG
 -- ==========================================
