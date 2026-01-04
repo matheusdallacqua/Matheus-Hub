@@ -114,7 +114,7 @@ function FarmModule.EquipWeapon()
     end)
 end
 
--- [[ 6. LOOP DE FARM ]]
+-- [[ 6. LOOP DE FARM ATUALIZADO COM MAGNET ]]
 function FarmModule.StartLevelFarm(Toggle)
     _G.AutoFarmLevel = Toggle
     task.spawn(function()
@@ -123,24 +123,36 @@ function FarmModule.StartLevelFarm(Toggle)
             pcall(function()
                 local myLevel = Player.Data.Level.Value
                 local data = nil
+                
+                -- Busca a Quest ideal para o seu nível
                 for _, q in ipairs(QuestData["Sea 1"]) do
                     if myLevel >= q.Level then data = q end
                 end
 
                 if data then
+                    -- Verifica se já está com a missão na tela
                     local hasQuest = Player.PlayerGui.Main:FindFirstChild("Quest") and Player.PlayerGui.Main.Quest.Visible
+                    
                     if not hasQuest then
-                        _G.AutoClick = false
+                        _G.AutoClick = false -- Para de bater para pegar a quest
                         SmoothTween(data.NPC_Pos)
                         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", data.QuestName, data.QuestID)
                     else
+                        -- Procura o inimigo da missão
                         local Enemy = game.Workspace.Enemies:FindFirstChild(data.Name)
+                        
                         if Enemy and Enemy:FindFirstChild("HumanoidRootPart") and Enemy.Humanoid.Health > 0 then
                             FarmModule.EquipWeapon()
                             FarmModule.StartAutoClick(true)
+                            
+                            -- MAGNET: Usa a sua nova função de puxar mobs
+                            Magnet(Enemy) 
+                            
+                            -- Posicionamento: 10 studs acima do inimigo para segurança
                             Player.Character.HumanoidRootPart.CFrame = Enemy.HumanoidRootPart.CFrame * CFrame.new(0, 10, 0)
-                            BringMobs(Enemy)
                         else
+                            -- Se o mob morreu ou não nasceu, vai para o spawn point dele
+                            _G.AutoClick = false
                             SmoothTween(data.Mob_Pos)
                         end
                     end
