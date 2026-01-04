@@ -64,31 +64,34 @@ local function BringMobs(TargetMob)
     end)
 end
 
--- [[ 4. FAST ATTACK (CANCELAMENTO DE ANIMAÇÃO) ]]
+-- [[ 4. FAST ATTACK (VERSÃO HOHO HUB INTEGRADA) ]]
 function FarmModule.FastAttack(Toggle)
     _G.FastAttack = Toggle
+    
+    -- Carrega as referências do Framework (Lógica Literal que você mandou)
+    local CombatFramework = require(game:GetService("Players").LocalPlayer.PlayerScripts.CombatFramework)
+    local AttackLogic = debug.getupvalues(CombatFramework.Attack)[1]
+    local VirtualUser = game:GetService("VirtualUser")
+
     task.spawn(function()
-        local CombatFramework = require(Player.PlayerScripts.CombatFramework)
-        local CombatFrameworkLib = debug.getupvalues(CombatFramework)[2]
-        local VirtualUser = game:GetService("VirtualUser")
-        
         while _G.FastAttack do
             task.wait(_G.FastAttackDelay or 0.01)
             pcall(function()
                 if Player.Character:FindFirstChildOfClass("Tool") then
-                    local Controller = CombatFrameworkLib.activeController
-                    if Controller and Controller.equipped then
-                        -- 1. Reseta o Framework (Metralhadora de Dano)
-                        Controller.attackInterval = 0
-                        Controller.timeToNextAttack = 0
-                        Controller.hitboxMagnitude = 60
-                        Controller:attack()
+                    -- LÓGICA HOHO HUB:
+                    if AttackLogic and AttackLogic.activeController then
+                        -- Reseta os estados para permitir ataque infinito
+                        AttackLogic.activeController.timeToNextAttack = 0
+                        AttackLogic.activeController.attacking = false
+                        AttackLogic.activeController.incrementAttackCounter()
+                        AttackLogic.activeController.hitboxMagnitude = 60
                         
-                        -- 2. Simula o Clique (Animação do Soco)
+                        -- EXECUÇÃO: Ataca e clica na tela ao mesmo tempo
+                        AttackLogic.activeController:attack()
                         VirtualUser:CaptureController()
                         VirtualUser:Button1Down(Vector2.new(850, 450), game.Workspace.CurrentCamera.CFrame)
                         
-                        -- 3. Valida o Hit
+                        -- Validação de dano para o servidor aceitar a velocidade
                         game:GetService("ReplicatedStorage").Remotes.Validator:FireServer(math.huge)
                     end
                 end
@@ -96,6 +99,7 @@ function FarmModule.FastAttack(Toggle)
         end
     end)
 end
+
 
 
 -- [[ 5. AUTO EQUIP ]]
