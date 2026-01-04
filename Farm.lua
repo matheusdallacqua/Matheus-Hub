@@ -45,16 +45,16 @@ local function SmoothTween(TargetCFrame)
     tween.Completed:Wait()
 end
 
--- [[ 3. BRING MOBS (LITERAL: MOBS NO CHÃO) ]]
+-- [[ 3. BRING MOBS (HOHO STYLE - NO CHÃO) ]]
 local function BringMobs(TargetMob)
     pcall(function()
         local TargetPos = TargetMob.HumanoidRootPart.CFrame
         for _, v in pairs(game.Workspace.Enemies:GetChildren()) do
-            if v.Name == TargetMob.Name and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
-                if (v.HumanoidRootPart.Position - TargetPos.p).Magnitude < 300 then
+            if string.find(v.Name, TargetMob.Name) and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+                if (v.HumanoidRootPart.Position - Player.Character.HumanoidRootPart.Position).Magnitude < 300 then
                     v.HumanoidRootPart.CanCollide = false
-                    -- Teleporta para o MOB alvo (no chão), não para o player
-                    v.HumanoidRootPart.CFrame = TargetPos
+                    v.HumanoidRootPart.CFrame = TargetPos -- Fixa no chão
+                    v.Humanoid.WalkSpeed = 0
                     if v.Humanoid:GetState() ~= Enum.HumanoidStateType.Physics then
                         v.Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
                     end
@@ -64,35 +64,25 @@ local function BringMobs(TargetMob)
     end)
 end
 
--- [[ 4. FAST ATTACK (VERSÃO HOHO HUB INTEGRADA) ]]
+-- [[ 4. FAST ATTACK (HOHO HUB) ]]
 function FarmModule.FastAttack(Toggle)
     _G.FastAttack = Toggle
-    
-    -- Carrega as referências do Framework (Lógica Literal que você mandou)
-    local CombatFramework = require(game:GetService("Players").LocalPlayer.PlayerScripts.CombatFramework)
+    local CombatFramework = require(Player.PlayerScripts.CombatFramework)
     local AttackLogic = debug.getupvalues(CombatFramework.Attack)[1]
     local VirtualUser = game:GetService("VirtualUser")
 
     task.spawn(function()
         while _G.FastAttack do
-            task.wait(_G.FastAttackDelay or 0.01)
+            task.wait(0.01)
             pcall(function()
                 if Player.Character:FindFirstChildOfClass("Tool") then
-                    -- LÓGICA HOHO HUB:
                     if AttackLogic and AttackLogic.activeController then
-                        -- Reseta os estados para permitir ataque infinito
                         AttackLogic.activeController.timeToNextAttack = 0
                         AttackLogic.activeController.attacking = false
                         AttackLogic.activeController.incrementAttackCounter()
-                        AttackLogic.activeController.hitboxMagnitude = 60
-                        
-                        -- EXECUÇÃO: Ataca e clica na tela ao mesmo tempo
                         AttackLogic.activeController:attack()
                         VirtualUser:CaptureController()
                         VirtualUser:Button1Down(Vector2.new(850, 450), game.Workspace.CurrentCamera.CFrame)
-                        
-                        -- Validação de dano para o servidor aceitar a velocidade
-                        game:GetService("ReplicatedStorage").Remotes.Validator:FireServer(math.huge)
                     end
                 end
             end)
@@ -100,45 +90,22 @@ function FarmModule.FastAttack(Toggle)
     end)
 end
 
-
-
--- [[ 5. AUTO EQUIP ]]
+-- [[ 5. AUTO EQUIP (ESTILO ELITE POR TOOLTIP) ]]
 function FarmModule.EquipWeapon()
     pcall(function()
-        local weaponType = _G.SelectWeapon or "Melee"
-        for _, v in pairs(Player.Backpack:GetChildren()) do
-            if v.ToolTip == weaponType or (weaponType == "Fruit" and v.ToolTip == "Blox Fruit") then
-                Player.Character.Humanoid:EquipTool(v)
-                break
-            end
+        local toolType = _G.SelectWeapon or "Melee" -- 'Melee' ou 'Sword'
+        if toolType == "Fruit" then toolType = "Blox Fruit" end
+        
+        -- Verifica se já está na mão
+        for _, tool in pairs(Player.Character:GetChildren()) do
+            if tool:IsA("Tool") and tool.ToolTip == toolType then return end
         end
-    end)
-end
--- Loop para identificar a arma selecionada (Melee, Sword, etc)
-task.spawn(function()
-    while task.wait(0.5) do
-        pcall(function()
-            if _G.AutoFarmLevel then
-                local weaponType = _G.SelectWeapon or "Melee"
-                if weaponType == "Fruit" then weaponType = "Blox Fruit" end
-                
-                for _, v in pairs(Player.Backpack:GetChildren()) do
-                    if v.ToolTip == weaponType then
-                        _G.CurrentEquipName = v.Name
-                        break
-                    end
-                end
-            end
-        end)
-    end
-end)
 
-function FarmModule.EquipWeapon()
-    pcall(function()
-        if _G.CurrentEquipName then
-            local tool = Player.Backpack:FindFirstChild(_G.CurrentEquipName)
-            if tool then
+        -- Se não estiver, equipa da mochila
+        for _, tool in pairs(Player.Backpack:GetChildren()) do
+            if tool:IsA("Tool") and tool.ToolTip == toolType then
                 Player.Character.Humanoid:EquipTool(tool)
+                break
             end
         end
     end)
@@ -165,11 +132,16 @@ function FarmModule.StartLevelFarm(Toggle)
                     else
                         local Enemy = game.Workspace.Enemies:FindFirstChild(data.Name)
                         if Enemy and Enemy:FindFirstChild("HumanoidRootPart") and Enemy.Humanoid.Health > 0 then
+                            -- EQUIPA A ARMA
                             FarmModule.EquipWeapon()
-                            -- VOCÊ fica em cima, o NPC fica no chão
+                            
+                            -- POSICIONA 10 STUDS ACIMA (SEGURO)
                             Player.Character.HumanoidRootPart.CFrame = Enemy.HumanoidRootPart.CFrame * CFrame.new(0, 10, 0)
+                            
+                            -- PUXA OS MOBS PRO CHÃO
                             BringMobs(Enemy)
                         else
+                            -- VAI ATÉ O SPAWN DOS MOBS
                             SmoothTween(data.Mob_Pos)
                         end
                     end
