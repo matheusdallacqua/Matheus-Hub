@@ -215,7 +215,7 @@ FruitTab:CreateToggle({
     Callback = function(Value) if FruitsModule then FruitsModule.AutoStoreFruit(Value) end end,
 })
 
-FruitTab:CreateSection("Gacha")
+-- [[ NA SUA MAIN.LUA - ABA DE FRUTAS ]]
 FruitTab:CreateToggle({
     Name = "Auto Gacha Loop",
     CurrentValue = false,
@@ -224,13 +224,16 @@ FruitTab:CreateToggle({
         if Value then
             task.spawn(function()
                 while _G.AutoGachaLoop do
-                    if FruitsModule then FruitsModule.BuyGacha() end
-                    task.wait(5)
+                    if FruitsModule and FruitsModule.BuyGacha then 
+                        FruitsModule.BuyGacha() 
+                    end
+                    task.wait(0.1) -- O seu delay de spam
                 end
             end)
         end
     end,
 })
+
 
 -- ==========================================
 -- ABA 6: CONFIG
