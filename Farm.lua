@@ -1,8 +1,16 @@
 local FarmModule = {}
 local Player = game.Players.LocalPlayer
 local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local VirtualUser = game:GetService("VirtualUser")
 
--- [[ 1. TABELA DE QUESTS ]]
+-- [[ VARIÁVEIS DE CONTROLE ]]
+_G.FastAttack = false
+_G.AutoClick = false
+_G.BringMobs = false
+
+-- [[ 1. TABELA DE QUESTS (MANTIDA) ]]
 local QuestData = {
     ["Sea 1"] = {
         {Level = 0, Name = "Bandit", QuestName = "BanditQuest1", QuestID = 1, NPC_Pos = CFrame.new(1060, 16, 1547), Mob_Pos = CFrame.new(1145, 17, 1634)},
@@ -32,99 +40,199 @@ local QuestData = {
     }
 }
 
--- [[ 2. TWEEN ]]
+-- [[ 2. UTILS ]]
 local function SmoothTween(TargetCFrame)
     local Character = Player.Character
     if not Character or not Character:FindFirstChild("HumanoidRootPart") then return end
     local Root = Character.HumanoidRootPart
+    
+    -- Se tiver sentado, levanta (evita bugs de barco)
+    if Character.Humanoid.Sit then Character.Humanoid.Sit = false end
+
     local Distance = (Root.Position - TargetCFrame.p).Magnitude
-    if Distance < 15 then Root.CFrame = TargetCFrame return end
-    local info = TweenInfo.new(Distance / 250, Enum.EasingStyle.Linear)
+    if Distance < 15 then 
+        Root.CFrame = TargetCFrame 
+        return 
+    end
+    
+    local Speed = 300 -- Velocidade do Tween
+    local info = TweenInfo.new(Distance / Speed, Enum.EasingStyle.Linear)
     local tween = TweenService:Create(Root, info, {CFrame = TargetCFrame})
     tween:Play()
     tween.Completed:Wait()
 end
 
--- [[ 3. BRING MOBS ]]
-local function BringMobs(TargetMob)
+-- [[ 3. FAST ATTACK & AUTO CLICK (REFORMULADO) ]]
+-- Lógica potente inspirada no Redz/Hoho Hub
+local CombatFramework = require(game:GetService("Players").LocalPlayer.PlayerScripts.CombatFramework)
+local CameraShaker = require(game:GetService("Players").LocalPlayer.PlayerScripts.CombatFramework.CameraShaker)
+local RigController = require(game:GetService("Players").LocalPlayer.PlayerScripts.CombatFramework.RigController)
+
+-- Função auxiliar para "burlar" o delay
+local function FastAttackLogic()
     pcall(function()
-        local TargetPos = TargetMob.HumanoidRootPart.CFrame
-        for _, v in pairs(game.Workspace.Enemies:GetChildren()) do
-            if string.find(v.Name, TargetMob.Name) and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
-                v.HumanoidRootPart.CanCollide = false
-                v.HumanoidRootPart.CFrame = TargetPos
+        local AC = debug.getupvalues(require(game:GetService("Players").LocalPlayer.PlayerScripts.CombatFramework))
+        local Key = AC[2]
+
+        if _G.FastAttack then
+            -- Reduz cooldown interno da arma para 0
+            if debug.getupvalues(CombatFramework)[2] then
+                debug.setupvalue(CombatFramework, 2, {
+                    activeController = {
+                        timeToNextAttack = 0,
+                        focusStart = 0,
+                        hitboxMagnitude = 60, -- Tenta aumentar a hitbox interna
+                        humanoid = game.Players.LocalPlayer.Character.Humanoid
+                    }
+                })
             end
+            
+            -- Dispara o ataque
+            game:GetService("ReplicatedStorage").RigControllerEvent:FireServer("weaponChange", tostring(Player.Backpack:FindFirstChild(_G.SelectWeapon) or Player.Character:FindFirstChild(_G.SelectWeapon)))
+            game:GetService("ReplicatedStorage").Remotes.Validator:FireServer(math.floor(os.clock() / 99999))
+            
+            -- Clique Virtual
+            VirtualUser:CaptureController()
+            VirtualUser:Button1Down(Vector2.new(1280, 672))
         end
     end)
 end
 
--- [[ 4. AUTO CLICK (TXT OPENSOURCE) ]]
-function FarmModule.StartAutoClick(Toggle)
-    _G.AutoClick = Toggle
-    if _G.ClickAlreadyStarted then return end -- Evita duplicar o loop
-    _G.ClickAlreadyStarted = true
+-- Hook para ativar o Fast Attack no módulo
+function FarmModule.FastAttack(State)
+    _G.FastAttack = State
+end
+
+function FarmModule.StartAutoClick(State)
+    _G.AutoClick = State
+end
+
+-- Loop separado extremamente rápido para o ataque
+task.spawn(function()
+    while true do
+        task.wait() -- Roda o mais rápido possível sem travar (Heartbeat seria melhor, mas wait() é seguro)
+        if _G.FastAttack or _G.AutoClick then
+            FastAttackLogic()
+        end
+    end
+end)
+
+-- [[ 4. BRING MOBS + HITBOX EXPANDER (CORREÇÃO DE INTANGÍVEL) ]]
+local function BringMobs(TargetMobName)
+    if not _G.BringMobs then return end
     
-    task.spawn(function()
-        game:GetService("RunService").RenderStepped:Connect(function()
-            if _G.AutoClick then
-                pcall(function()
-                    if Player.Character:FindFirstChildOfClass("Tool") then
-                        game:GetService('VirtualUser'):CaptureController()
-                        game:GetService('VirtualUser'):Button1Down(Vector2.new(0,1,0,1))
+    local MyRoot = Player.Character:FindFirstChild("HumanoidRootPart")
+    if not MyRoot then return end
+
+    pcall(function()
+        for _, v in pairs(game.Workspace.Enemies:GetChildren()) do
+            if v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
+                -- Verifica se é o mob correto
+                if string.find(v.Name, TargetMobName) then
+                    local Mag = (v.HumanoidRootPart.Position - MyRoot.Position).Magnitude
+                    
+                    -- CORREÇÃO: Só puxa se estiver a menos de 350 studs (Evita desync extremo)
+                    if Mag < 350 then 
+                        v.HumanoidRootPart.CanCollide = false
+                        v.HumanoidRootPart.CFrame = MyRoot.CFrame * CFrame.new(0, 0, -5) -- Puxa para frente do player
+                        
+                        -- HITBOX EXPANDER (A Mágica)
+                        v.HumanoidRootPart.Size = Vector3.new(60, 60, 60) 
+                        v.HumanoidRootPart.Transparency = 0.5 -- Para você ver a hitbox (opcional)
+                        if v.Humanoid.Health < v.Humanoid.MaxHealth * 0.1 then
+                            v.HumanoidRootPart.Size = Vector3.new(5,5,5) -- Reseta se for morrer
+                        end
+                        
+                        -- Anula a gravidade para ele não cair
+                        local bodyVel = v.HumanoidRootPart:FindFirstChild("BodyVelocity")
+                        if not bodyVel then
+                            bodyVel = Instance.new("BodyVelocity")
+                            bodyVel.Velocity = Vector3.new(0,0,0)
+                            bodyVel.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                            bodyVel.Parent = v.HumanoidRootPart
+                        end
                     end
-                end)
+                end
             end
-        end)
+        end
     end)
 end
 
 -- [[ 5. SISTEMA DE ARMAS ]]
 function FarmModule.EquipWeapon()
     pcall(function()
-        -- Pega o nome real que o loop da sua Main.lua encontrou
-        local weapon = _G.SelectWeapon 
-        if weapon then
-            local tool = Player.Backpack:FindFirstChild(weapon)
-            if tool then
-                Player.Character.Humanoid:EquipTool(tool)
-            end
+        local weapon = _G.SelectWeapon or "Melee" -- Fallback
+        
+        -- Verifica se já está equipado
+        if Player.Character:FindFirstChild(weapon) then return end
+        
+        local tool = Player.Backpack:FindFirstChild(weapon)
+        if tool then
+            Player.Character.Humanoid:EquipTool(tool)
         end
     end)
 end
 
--- [[ 6. LOOP DE FARM ]]
+-- [[ 6. LOOP PRINCIPAL DE FARM ]]
 function FarmModule.StartLevelFarm(Toggle)
     _G.AutoFarmLevel = Toggle
+    
     task.spawn(function()
         while _G.AutoFarmLevel do
-            task.wait(0.1)
+            task.wait(0.1) -- Loop de lógica (não precisa ser instantâneo)
             pcall(function()
+                -- Verifica Level
                 local myLevel = Player.Data.Level.Value
                 local data = nil
+                
+                -- Seleciona a Quest certa
                 for _, q in ipairs(QuestData["Sea 1"]) do
                     if myLevel >= q.Level then data = q end
                 end
 
                 if data then
+                    -- Checa se já tem a quest
                     local hasQuest = Player.PlayerGui.Main:FindFirstChild("Quest") and Player.PlayerGui.Main.Quest.Visible
+                    
                     if not hasQuest then
+                        -- PEGAR QUEST
                         _G.AutoClick = false
+                        _G.FastAttack = false -- Pausa ataque pra não bugar
                         SmoothTween(data.NPC_Pos)
-                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", data.QuestName, data.QuestID)
+                        
+                        -- Interação com NPC
+                        if (Player.Character.HumanoidRootPart.Position - data.NPC_Pos.p).Magnitude < 10 then
+                            ReplicatedStorage.Remotes.CommF_:InvokeServer("StartQuest", data.QuestName, data.QuestID)
+                        end
                     else
+                        -- FAZER QUEST
                         local Enemy = game.Workspace.Enemies:FindFirstChild(data.Name)
+                        
+                        -- Se o inimigo existe e está vivo
                         if Enemy and Enemy:FindFirstChild("HumanoidRootPart") and Enemy.Humanoid.Health > 0 then
+                            
+                            -- Vai até o mob (TP acima dele)
+                            Player.Character.HumanoidRootPart.CFrame = Enemy.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0)
+                            
+                            -- Ativa ferramentas de combate
                             FarmModule.EquipWeapon()
-                            FarmModule.StartAutoClick(true)
-                            Player.Character.HumanoidRootPart.CFrame = Enemy.HumanoidRootPart.CFrame * CFrame.new(0, 10, 0)
-                            BringMobs(Enemy)
+                            _G.AutoClick = true
+                            _G.FastAttack = true -- Ativa o modo turbo
+                            
+                            -- Puxa os mobs próximos e aumenta hitbox
+                            BringMobs(data.Name)
                         else
+                            -- Se não achou mob, vai para o spawnpoint deles
+                            _G.AutoClick = false
                             SmoothTween(data.Mob_Pos)
                         end
                     end
                 end
             end)
         end
+        -- Quando desativa o farm
+        _G.AutoClick = false
+        _G.FastAttack = false
     end)
 end
 
