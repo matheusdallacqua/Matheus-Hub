@@ -12,10 +12,17 @@ local URLS = {
     Farm     = "https://raw.githubusercontent.com/matheusdallacqua/Matheus-Hub/refs/heads/main/Farm.lua",
 }
 
--- === 3. CARREGAMENTO SEGURO DOS MÃ“DULOS ===
+-- === 3. CARREGAMENTO SEGURO DOS MÓDULOS ===
 local function GetModule(url)
-    local success, result = pcall(function() return loadstring(game:HttpGet(url))() end)
-    if success then return result else return nil end
+    local success, result = pcall(function() 
+        return loadstring(game:HttpGet(url))() 
+    end)
+    if success and result then 
+        return result 
+    else 
+        warn("Falha ao carregar modulo: " .. tostring(url))
+        return nil 
+    end
 end
 
 local TeleportModule = GetModule(URLS.Teleport)
