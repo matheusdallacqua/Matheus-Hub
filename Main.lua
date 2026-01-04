@@ -1,10 +1,7 @@
 -- [[ MATHEUS HUB - ULTRA COMPLEX MAIN VERSION 2026 ]]
--- Powered by Matheus & OpenSource Community
-
--- === 1. CARREGAMENTO DA INTERFACE (RAYFIELD) ===
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
--- === 2. LINKS DO REPOSITÃ“RIO GITHUB ===
+-- === LINKS DO REPOSITÓRIO ===
 local URLS = {
     Teleport = "https://raw.githubusercontent.com/matheusdallacqua/Matheus-Hub/refs/heads/main/Teleport.lua",
     Visual   = "https://raw.githubusercontent.com/matheusdallacqua/Matheus-Hub/refs/heads/main/Visual.lua",
@@ -12,10 +9,9 @@ local URLS = {
     Farm     = "https://raw.githubusercontent.com/matheusdallacqua/Matheus-Hub/refs/heads/main/Farm.lua",
 }
 
--- === 3. CARREGAMENTO SEGURO DOS MÃ“DULOS ===
 local function GetModule(url)
     local success, result = pcall(function() return loadstring(game:HttpGet(url))() end)
-    if success then return result else return nil end
+    return success and result or nil
 end
 
 local TeleportModule = GetModule(URLS.Teleport)
@@ -23,25 +19,9 @@ local VisualsModule  = GetModule(URLS.Visual)
 local FruitsModule   = GetModule(URLS.Fruits)
 local FarmModule     = GetModule(URLS.Farm)
 
--- === 4. DETECÃ‡ÃƒO DE DADOS DO JOGADOR ===
-local PlaceID = game.PlaceId
 local Player = game.Players.LocalPlayer
-local CurrentSea = "Sea 1"
 
-if PlaceID == 2753915549 then CurrentSea = "Sea 1"
-elseif PlaceID == 4442272183 or PlaceID == 4442245441 then CurrentSea = "Sea 2"
-elseif PlaceID == 7449423635 then CurrentSea = "Sea 3" end
-
-local Select_World_Sea = CurrentSea
-local Select_Island_Travelling = ""
-
-local IslandNames = {
-    ["Sea 1"] = {"Starter Island", "Jungle", "Desert", "Middle Town", "Frozen Village", "Marineford", "Skypiea", "Prison", "Magma Village", "Fountain City"},
-    ["Sea 2"] = {"Cafe", "Kingdom of Rose", "Green Zone", "Graveyard", "Snow Mountain", "Hot and Cold", "Cursed Ship", "Ice Castle", "Forgotten Island", "Dark Arena"},
-    ["Sea 3"] = {"Mansion", "Port Town", "Hydra Island", "Floating Turtle", "Castle on the Sea", "Haunted Castle", "Sea of Treats", "Tiki Outpost"}
-}
-
--- === 5. CRIAÃ‡ÃƒO DA JANELA PRINCIPAL ===
+-- === JANELA PRINCIPAL ===
 local Window = Rayfield:CreateWindow({
    Name = "Matheus Hub | V2 Ultra Complex",
    LoadingTitle = "Iniciando Matheus Hub...",
@@ -51,112 +31,54 @@ local Window = Rayfield:CreateWindow({
 })
 
 -- ==========================================
--- ABA 1: FARM (BOTÃ•ES PRINCIPAIS)
--- ==========================================
-local FarmTab = Window:CreateTab("Home", 4483362458)
-
--- ==========================================
--- ABA 1: FARM (VISUAL OPENSOURCE STYLE)
+-- ABA 1: AUTO FARM
 -- ==========================================
 local FarmTab = Window:CreateTab("Auto Farm", 4483362458)
 
--- SeÃ§Ã£o de Status (Muito comum em scripts elite)
-FarmTab:CreateSection("Farm Status")
-local StatusLabel = FarmTab:CreateParagraph({Title = "Current Task:", Content = "Waiting for start..."})
-
 FarmTab:CreateSection("Main Farm Settings")
 
--- Dropdown de Modo (O visual do Tsuo tem isso para escolher entre Level, Bone, etc)
-FarmTab:CreateDropdown({
-    Name = "Select Farm Mode",
-    Options = {"Level Farm", "Nearest Farm", "Chest Farm"},
-    CurrentOption = {"Level Farm"},
-    Flag = "FarmMode",
-    Callback = function(Value)
-        _G.FarmMode = Value[1]
-    end    
-})
-
--- O Toggle Principal (Com o visual limpo)
 FarmTab:CreateToggle({
     Name = "Auto Farm Level [Active]",
     CurrentValue = false,
-    Flag = "AutoFarmLevel",
     Callback = function(Value)
         _G.AutoFarmLevel = Value
-        if Value then
-            StatusLabel:Set({Title = "Current Task:", Content = "Farming Levels..."})
-            if FarmModule then FarmModule.StartLevelFarm(Value) end
-        else
-            StatusLabel:Set({Title = "Current Task:", Content = "Idle"})
-        end
+        if FarmModule then FarmModule.StartLevelFarm(Value) end
     end,
 })
-
-
--- ==========================================
-
-
--- AUTO CLICK
-FarmTab:CreateToggle({
-    Name = "Auto Clicker / Attack",
-    CurrentValue = false, -- Começa desligado por segurança
-    Callback = function(Value)
-        _G.AutoClick = Value
-        
-        -- Se o FarmModule foi carregado lá em cima pelo GitHub
-        if FarmModule then
-            -- Se o valor for verdadeiro, liga o clique
-            if Value then
-                FarmModule.StartAutoClick(true)
-            else
-                -- Se for falso, apenas muda a variável para o loop parar
-                _G.AutoClick = false
-            end
-        else
-            -- Aviso caso o módulo do GitHub -- ==========================================
--- ABA 3: FARM CONFIG
--- ==========================================
-local FarmConfigTab = Window:CreateTab("Farm Config", 4483362458)
-
-FarmConfigTab:CreateSection("Mob Settings")
-
--- Ativa o Magnet que você configurou no Farm.lua
-FarmConfigTab:CreateToggle({
-    Name = "Bring Mobs (Magnet)",
-    CurrentValue = true, -- Já vem ligado para facilitar
-    Callback = function(Value)
-        _G.BringMobs = Value
-    end,
-})
-não tenha carregado
-            Rayfield:Notify({Title = "Erro", Content = "FarmModule não carregado!"})
-        end
-    end,
-})
-
 
 FarmTab:CreateToggle({
     Name = "Ativar Fast Attack",
     CurrentValue = false,
     Callback = function(Value)
         _G.FastAttack = Value
-        -- Ativa o clique junto com o Fast Attack
         _G.AutoClick = Value
-        if FarmModule then 
-            FarmModule.StartAutoClick(Value)
-        end
+        if FarmModule then FarmModule.StartAutoClick(Value) end
     end,
 })
 
+-- ==========================================
+-- ABA 2: FARM CONFIG
+-- ==========================================
+local FarmConfigTab = Window:CreateTab("Farm Config", 4483362458)
+
+FarmConfigTab:CreateSection("Mob Settings")
+
+FarmConfigTab:CreateToggle({
+    Name = "Bring Mobs (Magnet)",
+    CurrentValue = true,
+    Callback = function(Value)
+        _G.BringMobs = Value
+    end,
+})
+
+-- O TEU LOOP DE DELAY (MANTIDO CONFORME PEDISTE)
 local AttackList = {"0", "0.1", "0.175", "0.2", "0.25", "0.3", "0.35", "0.4", "0.45", "0.5", "0.55", "0.6", "0.65", "0.7", "0.75", "0.8", "0.85", "0.9", "0.95", "1"}
 FarmConfigTab:CreateDropdown({
     Name = "FastAttack Delay",
     Options = AttackList,
-    CurrentOption = {"0.1"}, -- Começar com 0.1 é melhor
+    CurrentOption = {"0.1"},
     Callback = function(Value)
-        -- O segredo: tonumber faz o "0.1" virar número real
-        _G.FastAttackDelay = tonumber(Value[1])
+        _G.FastAttackDelay = Value[1]
     end    
 })
 
@@ -164,67 +86,40 @@ spawn(function()
     while wait(.1) do
         if _G.FastAttackDelay then
             pcall(function()
-                if _G.FastAttackDelay == "0" then
-                    _G.FastAttackDelay = 0
-                elseif _G.FastAttackDelay == "0.1" then
-                    _G.FastAttackDelay = 0.1
-                elseif _G.FastAttackDelay == "0.175" then
-                    _G.FastAttackDelay = 0.175
-                elseif _G.FastAttackDelay == "0.2" then
-                    _G.FastAttackDelay = 0.2
-                elseif _G.FastAttackDelay == "0.25" then
-                    _G.FastAttackDelay = 0.25
-                elseif _G.FastAttackDelay == "0.3" then
-                    _G.FastAttackDelay = 0.3
-                elseif _G.FastAttackDelay == "0.35" then
-                    _G.FastAttackDelay = 0.35
-                elseif _G.FastAttackDelay == "0.4" then
-                    _G.FastAttackDelay = 0.4 
-                elseif _G.FastAttackDelay == "0.45" then
-                    _G.FastAttackDelay = 0.45
-                elseif _G.FastAttackDelay == "0.5" then
-                    _G.FastAttackDelay = 0.5
-                elseif _G.FastAttackDelay == "0.55" then
-                    _G.FastAttackDelay = 0.55
-                elseif _G.FastAttackDelay == "0.6" then
-                    _G.FastAttackDelay = 0.6
-                elseif _G.FastAttackDelay == "0.65" then
-                    _G.FastAttackDelay = 0.65
-                elseif _G.FastAttackDelay == "0.7" then
-                    _G.FastAttackDelay = 0.7
-                elseif _G.FastAttackDelay == "0.75" then
-                    _G.FastAttackDelay = 0.75
-                elseif _G.FastAttackDelay == "0.8" then
-                    _G.FastAttackDelay = 0.8
-                elseif _G.FastAttackDelay == "0.85" then
-                    _G.FastAttackDelay = 0.85
-                elseif _G.FastAttackDelay == "0.9" then
-                    _G.FastAttackDelay = 0.9
-                elseif _G.FastAttackDelay == "0.95" then
-                    _G.FastAttackDelay = 0.95
-                elseif _G.FastAttackDelay == "1" then
-                    _G.FastAttackDelay = 1
+                if _G.FastAttackDelay == "0" then _G.FastAttackDelay = 0
+                elseif _G.FastAttackDelay == "0.1" then _G.FastAttackDelay = 0.1
+                elseif _G.FastAttackDelay == "0.175" then _G.FastAttackDelay = 0.175
+                elseif _G.FastAttackDelay == "0.2" then _G.FastAttackDelay = 0.2
+                elseif _G.FastAttackDelay == "0.25" then _G.FastAttackDelay = 0.25
+                elseif _G.FastAttackDelay == "0.3" then _G.FastAttackDelay = 0.3
+                elseif _G.FastAttackDelay == "0.35" then _G.FastAttackDelay = 0.35
+                elseif _G.FastAttackDelay == "0.4" then _G.FastAttackDelay = 0.4 
+                elseif _G.FastAttackDelay == "0.45" then _G.FastAttackDelay = 0.45
+                elseif _G.FastAttackDelay == "0.5" then _G.FastAttackDelay = 0.5
+                elseif _G.FastAttackDelay == "0.55" then _G.FastAttackDelay = 0.55
+                elseif _G.FastAttackDelay == "0.6" then _G.FastAttackDelay = 0.6
+                elseif _G.FastAttackDelay == "0.65" then _G.FastAttackDelay = 0.65
+                elseif _G.FastAttackDelay == "0.7" then _G.FastAttackDelay = 0.7
+                elseif _G.FastAttackDelay == "0.75" then _G.FastAttackDelay = 0.75
+                elseif _G.FastAttackDelay == "0.8" then _G.FastAttackDelay = 0.8
+                elseif _G.FastAttackDelay == "0.85" then _G.FastAttackDelay = 0.85
+                elseif _G.FastAttackDelay == "0.9" then _G.FastAttackDelay = 0.9
+                elseif _G.FastAttackDelay == "0.95" then _G.FastAttackDelay = 0.95
+                elseif _G.FastAttackDelay == "1" then _G.FastAttackDelay = 1
                 end
             end)
         end
     end
 end)
 
--- Bloco Select Weapon que vocÃª enviou
 FarmConfigTab:CreateSection("Weapon Settings")
 
 local WeaponList = {"Melee","Sword","Fruit","Gun"}
-_G.SelectWeapon = "Melee"
-
 FarmConfigTab:CreateDropdown({
     Name = "Select Weapon",
     Options = WeaponList,
     CurrentOption = {"Melee"},
-    Flag = "Select Weapon",
-    Save = true,
-    Callback = function(Value)
-        _G.SelectWeapon = Value[1]
-    end    
+    Callback = function(Value) _G.SelectWeapon = Value[1] end    
 })
 
 -- O "cÃ©rebro" das armas
