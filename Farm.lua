@@ -64,23 +64,32 @@ local function BringMobs(TargetMob)
     end)
 end
 
--- Configuração de velocidade (segundos)
-local clickSpeed = 0.1 
-local autoClickEnabled = true
+-- [[ 4a. MOTOR DE AUTO CLICK (VERSÃO ULTRA - RENDERSTEPPED) ]]
+function FarmModule.StartAutoClick(Toggle)
+    _G.AutoClicker = Toggle
+    local VirtualUser = game:GetService("VirtualUser")
+    local RunService = game:GetService("RunService")
 
--- Serviço necessário para simular o clique real
-local virtualUser = game:GetService("VirtualUser")
+    -- Usamos RenderStepped para velocidade máxima de FPS
+    task.spawn(function()
+        local Connection
+        Connection = RunService.RenderStepped:Connect(function()
+            if _G.AutoClicker then
+                pcall(function()
+                    -- Só clica se estiver com arma na mão
+                    if game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool") then
+                        VirtualUser:CaptureController()
+                        VirtualUser:Button1Down(Vector2.new(0, 0))
+                    end
+                end)
+            else
+                -- Se desligar o farm, ele encerra a conexão para não dar lag
+                Connection:Disconnect()
+            end
+        end)
+    end)
+end
 
-task.spawn(function()
-    while task.wait(clickSpeed) do
-        if autoClickEnabled then
-            -- Simula o clique do botão esquerdo do mouse
-            -- O primeiro parâmetro vazio simula o clique na posição atual do mouse
-            virtualUser:CaptureController()
-            virtualUser:ClickButton1(Vector2.new(0, 0))
-        end
-    end
-end)
 
 -- Para desligar/ligar via código, basta mudar a variável:
 -- autoClickEnabled = false
