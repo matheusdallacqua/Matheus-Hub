@@ -90,26 +90,43 @@ function FarmModule.FastAttack(Toggle)
     end)
 end
 
--- [[ 5. AUTO EQUIP (ESTILO ELITE POR TOOLTIP) ]]
+-- [[ 5. SISTEMA DE EQUIPE COMPLETO (TRADUTOR + EQUIPER) ]]
+
+-- 5a. TRADUTOR (O código que você achou, otimizado)
+task.spawn(function()
+    while task.wait(0.5) do
+        pcall(function()
+            if _G.AutoFarmLevel then
+                -- Se o usuário selecionou uma categoria, este loop acha o nome real da arma
+                local category = _G.SelectWeaponType or "Melee" -- "Melee", "Sword", "Gun", "Fruit"
+                local toolTipTarget = (category == "Fruit" and "Blox Fruit" or category)
+
+                for _, v in pairs(Player.Backpack:GetChildren()) do
+                    if v.ToolTip == toolTipTarget then
+                        _G.RealWeaponName = v.Name -- Salva o nome real (ex: "Combat")
+                        break
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+-- 5b. FUNÇÃO QUE REALMENTE COLOCA NA MÃO
 function FarmModule.EquipWeapon()
     pcall(function()
-        local toolType = _G.SelectWeapon or "Melee" -- 'Melee' ou 'Sword'
-        if toolType == "Fruit" then toolType = "Blox Fruit" end
-        
-        -- Verifica se já está na mão
-        for _, tool in pairs(Player.Character:GetChildren()) do
-            if tool:IsA("Tool") and tool.ToolTip == toolType then return end
-        end
-
-        -- Se não estiver, equipa da mochila
-        for _, tool in pairs(Player.Backpack:GetChildren()) do
-            if tool:IsA("Tool") and tool.ToolTip == toolType then
+        if _G.RealWeaponName then
+            local tool = Player.Backpack:FindFirstChild(_G.RealWeaponName)
+            local toolInHand = Player.Character:FindFirstChild(_G.RealWeaponName)
+            
+            -- Só equipa se não estiver na mão
+            if tool and not toolInHand then
                 Player.Character.Humanoid:EquipTool(tool)
-                break
             end
         end
     end)
 end
+
 
 -- [[ 6. LOOP DE FARM ]]
 function FarmModule.StartLevelFarm(Toggle)
