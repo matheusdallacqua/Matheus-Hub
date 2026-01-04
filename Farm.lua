@@ -80,23 +80,31 @@ end
 
 
 
--- [[ 4. AUTO CLICK (TXT OPENSOURCE) ]]
+-- [[ 4. AUTO CLICK & FAST ATTACK (VERSÃO CORRIGIDA) ]]
 function FarmModule.StartAutoClick(Toggle)
     _G.AutoClick = Toggle
-    if _G.ClickAlreadyStarted then return end -- Evita duplicar o loop
+    if _G.ClickAlreadyStarted then return end 
     _G.ClickAlreadyStarted = true
     
     task.spawn(function()
-        game:GetService("RunService").RenderStepped:Connect(function()
+        while true do
+            -- O segredo está aqui: ele espera o tempo que você selecionou no menu!
+            -- Se _G.FastAttackDelay for 0, ele bate na velocidade máxima.
+            task.wait(_G.FastAttackDelay or 0.1) 
+            
             if _G.AutoClick then
                 pcall(function()
                     if Player.Character:FindFirstChildOfClass("Tool") then
-                        game:GetService('VirtualUser'):CaptureController()
-                        game:GetService('VirtualUser'):Button1Down(Vector2.new(0,1,0,1))
+                        local vUser = game:GetService('VirtualUser')
+                        vUser:CaptureController()
+                        
+                        -- Clica (Down e Up é necessário para registrar o hit no Blox Fruits)
+                        vUser:Button1Down(Vector2.new(1e4, 1e4))
+                        vUser:Button1Up(Vector2.new(1e4, 1e4))
                     end
                 end)
             end
-        end)
+        end
     end)
 end
 
