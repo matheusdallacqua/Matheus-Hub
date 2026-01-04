@@ -30,19 +30,6 @@ local Window = Rayfield:CreateWindow({
     KeySystem = false
 })
 
-
-FarmTab:CreateSection("Combat Settings")
-
-FarmTab:CreateToggle({
-    Name = "Ativar Fast Attack",
-    CurrentValue = false,
-    Callback = function(Value)
-        _G.FastAttack = Value
-        _G.AutoClick = Value
-        if FarmModule then FarmModule.StartAutoClick(Value) end
-    end,
-    })
-
 -- ==========================================
 -- ABA 1: AUTO FARM (CORRIGIDA)
 -- ==========================================
@@ -83,7 +70,8 @@ FarmTab:CreateToggle({
         _G.AutoClick = Value
         if FarmModule then FarmModule.StartAutoClick(Value) end
     end,
-})    
+})
+    
 -- ==========================================
 -- ABA 2: FARM CONFIG
 -- ==========================================
@@ -123,7 +111,6 @@ FarmConfigTab:CreateDropdown({
     end
 })
 
--- O "Cérebro" das Armas
 task.spawn(function()
     while wait(1) do
         pcall(function()
@@ -227,7 +214,7 @@ FruitTab:CreateToggle({
             task.spawn(function()
                 while _G.AutoGachaLoop do
                     if FruitsModule then FruitsModule.BuyGacha() end
-                    task.wait(5) -- Delay de segurança para o loop
+                    task.wait(5)
                 end
             end)
         end
@@ -253,4 +240,3 @@ end)
 
 Rayfield:LoadConfiguration()
 Rayfield:Notify({Title = "team Morena do cabelo liso", Content = "Blox Fruit- Matheus Hub", Duration = 5})
-
