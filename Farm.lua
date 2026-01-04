@@ -70,21 +70,33 @@ function FarmModule.FastAttack(Toggle)
     task.spawn(function()
         local CombatFramework = require(Player.PlayerScripts.CombatFramework)
         local CombatFrameworkLib = debug.getupvalues(CombatFramework)[2]
+        local VirtualUser = game:GetService("VirtualUser")
+        
         while _G.FastAttack do
             task.wait(_G.FastAttackDelay or 0.01)
             pcall(function()
-                local Controller = CombatFrameworkLib.activeController
-                if Controller and Controller.equipped then
-                    Controller.attackInterval = 0
-                    Controller.timeToNextAttack = 0
-                    Controller.hitboxMagnitude = 60
-                    Controller:attack()
-                    game:GetService("ReplicatedStorage").Remotes.Validator:FireServer(math.huge)
+                if Player.Character:FindFirstChildOfClass("Tool") then
+                    local Controller = CombatFrameworkLib.activeController
+                    if Controller and Controller.equipped then
+                        -- 1. Reseta o Framework (Metralhadora de Dano)
+                        Controller.attackInterval = 0
+                        Controller.timeToNextAttack = 0
+                        Controller.hitboxMagnitude = 60
+                        Controller:attack()
+                        
+                        -- 2. Simula o Clique (Animação do Soco)
+                        VirtualUser:CaptureController()
+                        VirtualUser:Button1Down(Vector2.new(850, 450), game.Workspace.CurrentCamera.CFrame)
+                        
+                        -- 3. Valida o Hit
+                        game:GetService("ReplicatedStorage").Remotes.Validator:FireServer(math.huge)
+                    end
                 end
             end)
         end
     end)
 end
+
 
 -- [[ 5. AUTO EQUIP ]]
 function FarmModule.EquipWeapon()
