@@ -64,35 +64,7 @@ local function BringMobs(TargetMob)
     end)
 end
 
--- [[ 4a. MOTOR DE AUTO CLICK (VERSÃO ULTRA - RENDERSTEPPED) ]]
-function FarmModule.StartAutoClick(Toggle)
-    _G.AutoClicker = Toggle
-    local VirtualUser = game:GetService("VirtualUser")
-    local RunService = game:GetService("RunService")
 
-    -- Usamos RenderStepped para velocidade máxima de FPS
-    task.spawn(function()
-        local Connection
-        Connection = RunService.RenderStepped:Connect(function()
-            if _G.AutoClicker then
-                pcall(function()
-                    -- Só clica se estiver com arma na mão
-                    if game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool") then
-                        VirtualUser:CaptureController()
-                        VirtualUser:Button1Down(Vector2.new(0, 0))
-                    end
-                end)
-            else
-                -- Se desligar o farm, ele encerra a conexão para não dar lag
-                Connection:Disconnect()
-            end
-        end)
-    end)
-end
-
-
--- Para desligar/ligar via código, basta mudar a variável:
--- autoClickEnabled = false
 
 -- [[ 5. SISTEMA DE EQUIPE COMPLETO (TRADUTOR + EQUIPER) ]]
 
@@ -107,7 +79,31 @@ task.spawn(function()
 
                 for _, v in pairs(Player.Backpack:GetChildren()) do
                     if v.ToolTip == toolTipTarget then
-                        _G.RealWeaponName = v.Name -- Salva o nome real (ex: "Combat")
+                        _G.RealWeaponName = v.Name -- Salva o nome real (ex: "Co-- [[ 4a. MOTOR DE AUTO CLICK (VERSÃO 100% IGUAL AO TXT / MOBILE) ]]
+function FarmModule.StartAutoClick(Toggle)
+    _G.AutoClick = Toggle -- Nome corrigido para bater com a Main
+    local VirtualUser = game:GetService("VirtualUser")
+    local RunService = game:GetService("RunService")
+
+    task.spawn(function()
+        -- Conecta ao RenderStepped (Velocidade do TXT)
+        local Connection
+        Connection = RunService.RenderStepped:Connect(function()
+            if _G.AutoClick then
+                pcall(function()
+                    if Player.Character:FindFirstChildOfClass("Tool") then
+                        VirtualUser:CaptureController()
+                        -- Coordenada exata do seu TXT para Mobile
+                        VirtualUser:Button1Down(Vector2.new(0,1,0,1))
+                    end
+                end)
+            else
+                -- Desconecta para não dar lag quando desligar
+                if Connection then Connection:Disconnect() end
+            end
+        end)
+    end)
+                                endmbat")
                         break
                     end
                 end
@@ -132,7 +128,7 @@ function FarmModule.EquipWeapon()
 end
 
 
--- [[ 6. LOOP DE FARM ]]
+-- [[ 6. LOOP DE FARM CORRIGIDO ]]
 function FarmModule.StartLevelFarm(Toggle)
     _G.AutoFarmLevel = Toggle
     task.spawn(function()
@@ -148,21 +144,24 @@ function FarmModule.StartLevelFarm(Toggle)
                 if data then
                     local hasQuest = Player.PlayerGui.Main:FindFirstChild("Quest") and Player.PlayerGui.Main.Quest.Visible
                     if not hasQuest then
+                        -- Se for pegar quest, desliga o clique para não bugar o NPC
+                        _G.AutoClick = false
                         SmoothTween(data.NPC_Pos)
                         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", data.QuestName, data.QuestID)
                     else
                         local Enemy = game.Workspace.Enemies:FindFirstChild(data.Name)
                         if Enemy and Enemy:FindFirstChild("HumanoidRootPart") and Enemy.Humanoid.Health > 0 then
-                            -- EQUIPA A ARMA
+                            
+                            -- LIGA O CLIQUE QUANDO CHEGA NO INIMIGO
+                            if not _G.AutoClick then 
+                                FarmModule.StartAutoClick(true) 
+                            end
+
                             FarmModule.EquipWeapon()
-                            
-                            -- POSICIONA 10 STUDS ACIMA (SEGURO)
                             Player.Character.HumanoidRootPart.CFrame = Enemy.HumanoidRootPart.CFrame * CFrame.new(0, 10, 0)
-                            
-                            -- PUXA OS MOBS PRO CHÃO
                             BringMobs(Enemy)
                         else
-                            -- VAI ATÉ O SPAWN DOS MOBS
+                            -- Se estiver procurando o mob, mantém o clique ligado ou vai até o spawn
                             SmoothTween(data.Mob_Pos)
                         end
                     end
@@ -172,5 +171,4 @@ function FarmModule.StartLevelFarm(Toggle)
     end)
 end
 
-return FarmModule
 
