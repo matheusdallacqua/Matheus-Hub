@@ -10,7 +10,9 @@ local URLS = {
 }
 
 local function GetModule(url)
-    local success, result = pcall(function() return loadstring(game:HttpGet(url))() end)
+    local success, result = pcall(function()
+        return loadstring(game:HttpGet(url))()
+    end)
     return success and result or nil
 end
 
@@ -26,7 +28,11 @@ local Window = Rayfield:CreateWindow({
    Name = "Matheus Hub | V2 Ultra Complex",
    LoadingTitle = "Iniciando Matheus Hub...",
    LoadingSubtitle = "by Matheus (2026 Edition)",
-   ConfigurationSaving = { Enabled = true, FolderName = "MatheusHub", FileName = "MainConfig" },
+   ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "MatheusHub",
+        FileName = "MainConfig"
+   },
    KeySystem = false
 })
 
@@ -42,7 +48,9 @@ FarmTab:CreateToggle({
     CurrentValue = false,
     Callback = function(Value)
         _G.AutoFarmLevel = Value
-        if FarmModule then FarmModule.StartLevelFarm(Value) end
+        if FarmModule then
+            FarmModule.StartLevelFarm(Value)
+        end
     end,
 })
 
@@ -52,34 +60,22 @@ FarmTab:CreateToggle({
     Callback = function(Value)
         _G.FastAttack = Value
         _G.AutoClick = Value
-        if FarmModule then FarmModule.StartAutoClick(Value) end
+        if FarmModule then
+            FarmModule.StartAutoClick(Value)
+        end
     end,
 })
 
--- ==========================================
--- ABA 2: FARM CONFIG
--- ==========================================
-local FarmConfigTab = Window:CreateTab("Farm Config", 4483362458)
-
-FarmConfigTab:CreateSection("Mob Settings")
-
-FarmConfigTab:CreateToggle({
-    Name = "Bring Mobs (Magnet)",
-    CurrentValue = true,
+-- << AUTO CLICK MANUAL (ADICIONADO) >>
+FarmTab:CreateToggle({
+    Name = "Auto Click (Manual)",
+    CurrentValue = false,
     Callback = function(Value)
-        _G.BringMobs = Value
+        _G.AutoClick = Value
+        if FarmModule then
+            FarmModule.StartAutoClick(Value)
+        end
     end,
-})
-
--- O TEU LOOP DE DELAY (MANTIDO CONFORME PEDISTE)
-local AttackList = {"0", "0.1", "0.175", "0.2", "0.25", "0.3", "0.35", "0.4", "0.45", "0.5", "0.55", "0.6", "0.65", "0.7", "0.75", "0.8", "0.85", "0.9", "0.95", "1"}
-FarmConfigTab:CreateDropdown({
-    Name = "FastAttack Delay",
-    Options = AttackList,
-    CurrentOption = {"0.1"},
-    Callback = function(Value)
-        _G.FastAttackDelay = Value[1]
-    end    
 })
 
 spawn(function()
