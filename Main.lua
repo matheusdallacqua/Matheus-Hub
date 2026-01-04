@@ -230,40 +230,36 @@ FarmConfigTab:CreateDropdown({
     end    
 })
 
--- O "cÃ©rebro" das armas
+-- [[ CÉREBRO DAS ARMAS - VERSÃO OTIMIZADA ]]
+_G.RealWeaponName = "" 
+
 task.spawn(function()
-    while wait() do
+    while task.wait(0.5) do -- Verifica a cada meio segundo para economizar bateria e CPU
         pcall(function()
-            if _G.SelectWeapon == "Melee" then
-                for i ,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-                    if v.ToolTip == "Melee" then
-                        if game.Players.LocalPlayer.Backpack:FindFirstChild(tostring(v.Name)) then
-                            _G.SelectWeapon = v.Name
-                        end
-                    end
+            local target = _G.SelectWeapon -- Pega o tipo selecionado no Dropdown (Melee, Sword, etc)
+            
+            -- Ajuste técnico: No Blox Fruits, o ToolTip das frutas é "Blox Fruit"
+            if target == "Fruit" then 
+                target = "Blox Fruit" 
+            end
+            
+            local found = false
+            
+            -- 1. Procura na Mochila (Backpack)
+            for _, v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+                if v:IsA("Tool") and (v.ToolTip == target or v.Name == target) then
+                    _G.RealWeaponName = v.Name
+                    found = true
+                    break
                 end
-            elseif _G.SelectWeapon == "Sword" then
-                for i ,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-                    if v.ToolTip == "Sword" then
-                        if game.Players.LocalPlayer.Backpack:FindFirstChild(tostring(v.Name)) then
-                            _G.SelectWeapon = v.Name
-                        end
-                    end
-                end
-            elseif _G.SelectWeapon == "Gun" then
-                for i ,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-                    if v.ToolTip == "Gun" then
-                        if game.Players.LocalPlayer.Backpack:FindFirstChild(tostring(v.Name)) then
-                            _G.SelectWeapon = v.Name
-                        end
-                    end
-                end
-            elseif _G.SelectWeapon == "Fruit" then
-                for i ,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-                    if v.ToolTip == "Blox Fruit" then
-                        if game.Players.LocalPlayer.Backpack:FindFirstChild(tostring(v.Name)) then
-                            _G.SelectWeapon = v.Name
-                        end
+            end
+            
+            -- 2. Se não achou na mochila, verifica se já está na mão do personagem
+            if not found then
+                for _, v in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
+                    if v:IsA("Tool") and (v.ToolTip == target or v.Name == target) then
+                        _G.RealWeaponName = v.Name
+                        break
                     end
                 end
             end
