@@ -198,6 +198,17 @@ FruitTab:CreateToggle({
     CurrentValue = false,
     Callback = function(Value) if FruitsModule then FruitsModule.AutoCollectFruit(Value) end end,
 })
+
+FruitTab:CreateToggle({
+    Name = "Bring All Fruits to Character",
+    CurrentValue = false,
+    Callback = function(Value) 
+        if FruitsModule and FruitsModule.BringFruits then 
+            FruitsModule.BringFruits(Value) 
+        end 
+    end,
+})
+
 FruitTab:CreateToggle({
     Name = "Auto Store Fruits",
     CurrentValue = false,
