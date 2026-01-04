@@ -95,20 +95,7 @@ FarmTab:CreateToggle({
 
 
 -- ==========================================
--- ABA 2: FARM CONFIG
--- ==========================================
-local FarmConfigTab = Window:CreateTab("Farm Config", 4483362458)
 
-FarmTab:CreateSection("Mob Settings")
-
--- FunÃ§Ã£o de Agrupar Mobs (Visual clÃ¡ssico do Redz/Tsuo)
-FarmTab:CreateToggle({
-    Name = "Bring Mobs (Fast Farm)",
-    CurrentValue = true,
-    Callback = function(Value)
-        _G.BringMobs = Value
-    end,
-})
 
 -- AUTO CLICK
 FarmTab:CreateToggle({
@@ -127,7 +114,22 @@ FarmTab:CreateToggle({
                 _G.AutoClick = false
             end
         else
-            -- Aviso caso o módulo do GitHub não tenha carregado
+            -- Aviso caso o módulo do GitHub -- ==========================================
+-- ABA 3: FARM CONFIG
+-- ==========================================
+local FarmConfigTab = Window:CreateTab("Farm Config", 4483362458)
+
+FarmConfigTab:CreateSection("Mob Settings")
+
+-- Ativa o Magnet que você configurou no Farm.lua
+FarmConfigTab:CreateToggle({
+    Name = "Bring Mobs (Magnet)",
+    CurrentValue = true, -- Já vem ligado para facilitar
+    Callback = function(Value)
+        _G.BringMobs = Value
+    end,
+})
+não tenha carregado
             Rayfield:Notify({Title = "Erro", Content = "FarmModule não carregado!"})
         end
     end,
@@ -139,21 +141,23 @@ FarmTab:CreateToggle({
     CurrentValue = false,
     Callback = function(Value)
         _G.FastAttack = Value
-        if FarmModule then FarmModule.FastAttack(Value) end
+        -- Ativa o clique junto com o Fast Attack
+        _G.AutoClick = Value
+        if FarmModule then 
+            FarmModule.StartAutoClick(Value)
+        end
     end,
 })
 
--- Bloco FastAttack Delay que vocÃª enviou
 local AttackList = {"0", "0.1", "0.175", "0.2", "0.25", "0.3", "0.35", "0.4", "0.45", "0.5", "0.55", "0.6", "0.65", "0.7", "0.75", "0.8", "0.85", "0.9", "0.95", "1"}
 FarmConfigTab:CreateDropdown({
-	Name = "FastAttack Delay",
-	Options = AttackList,
-    CurrentOption = {"0.5"},
-    Flag = "FastAttack Delay",
-    Save = true,
-	Callback = function(Value)
-		_G.FastAttackDelay = Value[1]
-	end    
+    Name = "FastAttack Delay",
+    Options = AttackList,
+    CurrentOption = {"0.1"}, -- Começar com 0.1 é melhor
+    Callback = function(Value)
+        -- O segredo: tonumber faz o "0.1" virar número real
+        _G.FastAttackDelay = tonumber(Value[1])
+    end    
 })
 
 spawn(function()
