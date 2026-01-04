@@ -12,17 +12,10 @@ local URLS = {
     Farm     = "https://raw.githubusercontent.com/matheusdallacqua/Matheus-Hub/refs/heads/main/Farm.lua",
 }
 
--- === 3. CARREGAMENTO SEGURO DOS MÓDULOS ===
+-- === 3. CARREGAMENTO SEGURO DOS MÃ“DULOS ===
 local function GetModule(url)
-    local success, result = pcall(function() 
-        return loadstring(game:HttpGet(url))() 
-    end)
-    if success and result then 
-        return result 
-    else 
-        warn("Falha ao carregar modulo: " .. tostring(url))
-        return nil 
-    end
+    local success, result = pcall(function() return loadstring(game:HttpGet(url))() end)
+    if success then return result else return nil end
 end
 
 local TeleportModule = GetModule(URLS.Teleport)
@@ -58,12 +51,12 @@ local Window = Rayfield:CreateWindow({
 })
 
 -- ==========================================
--- ABA 1: HOME (Ajustado para não bugar com a FarmTab)
+-- ABA 1: FARM (BOTÃ•ES PRINCIPAIS)
 -- ==========================================
-local HomeTab = Window:CreateTab("Home", 4483362458)
+local FarmTab = Window:CreateTab("Home", 4483362458)
 
 -- ==========================================
--- ABA 2: FARM (VISUAL OPENSOURCE STYLE)
+-- ABA 1: FARM (VISUAL OPENSOURCE STYLE)
 -- ==========================================
 local FarmTab = Window:CreateTab("Auto Farm", 4483362458)
 
@@ -102,7 +95,7 @@ FarmTab:CreateToggle({
 
 
 -- ==========================================
--- ABA 3: FARM CONFIG
+-- ABA 2: FARM CONFIG
 -- ==========================================
 local FarmConfigTab = Window:CreateTab("Farm Config", 4483362458)
 
@@ -230,36 +223,40 @@ FarmConfigTab:CreateDropdown({
     end    
 })
 
--- [[ CÉREBRO DAS ARMAS - VERSÃO OTIMIZADA ]]
-_G.RealWeaponName = "" 
-
+-- O "cÃ©rebro" das armas
 task.spawn(function()
-    while task.wait(0.5) do -- Verifica a cada meio segundo para economizar bateria e CPU
+    while wait() do
         pcall(function()
-            local target = _G.SelectWeapon -- Pega o tipo selecionado no Dropdown (Melee, Sword, etc)
-            
-            -- Ajuste técnico: No Blox Fruits, o ToolTip das frutas é "Blox Fruit"
-            if target == "Fruit" then 
-                target = "Blox Fruit" 
-            end
-            
-            local found = false
-            
-            -- 1. Procura na Mochila (Backpack)
-            for _, v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-                if v:IsA("Tool") and (v.ToolTip == target or v.Name == target) then
-                    _G.RealWeaponName = v.Name
-                    found = true
-                    break
+            if _G.SelectWeapon == "Melee" then
+                for i ,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+                    if v.ToolTip == "Melee" then
+                        if game.Players.LocalPlayer.Backpack:FindFirstChild(tostring(v.Name)) then
+                            _G.SelectWeapon = v.Name
+                        end
+                    end
                 end
-            end
-            
-            -- 2. Se não achou na mochila, verifica se já está na mão do personagem
-            if not found then
-                for _, v in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
-                    if v:IsA("Tool") and (v.ToolTip == target or v.Name == target) then
-                        _G.RealWeaponName = v.Name
-                        break
+            elseif _G.SelectWeapon == "Sword" then
+                for i ,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+                    if v.ToolTip == "Sword" then
+                        if game.Players.LocalPlayer.Backpack:FindFirstChild(tostring(v.Name)) then
+                            _G.SelectWeapon = v.Name
+                        end
+                    end
+                end
+            elseif _G.SelectWeapon == "Gun" then
+                for i ,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+                    if v.ToolTip == "Gun" then
+                        if game.Players.LocalPlayer.Backpack:FindFirstChild(tostring(v.Name)) then
+                            _G.SelectWeapon = v.Name
+                        end
+                    end
+                end
+            elseif _G.SelectWeapon == "Fruit" then
+                for i ,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+                    if v.ToolTip == "Blox Fruit" then
+                        if game.Players.LocalPlayer.Backpack:FindFirstChild(tostring(v.Name)) then
+                            _G.SelectWeapon = v.Name
+                        end
                     end
                 end
             end
@@ -268,7 +265,7 @@ task.spawn(function()
 end)
 
 -- ==========================================
--- ABA 4: TELEPORT (PROFISSIONAL)
+-- ABA 3: TELEPORT (PROFISSIONAL)
 local function CreateSeaDropdown(seaName, tabTitle)
     local Tab = Window:CreateTab(tabTitle, 4483362458)
     local OptionsList = {}
@@ -306,7 +303,7 @@ CreateSeaDropdown("Sea 2", "Sea 2 TP")
 CreateSeaDropdown("Sea 3", "Sea 3 TP")
 
 -- ==========================================
--- ABA 5: VISUALS (ESP & INFO)
+-- ABA 2: VISUALS (ESP & INFO)
 -- ==========================================
 local VisualTab = Window:CreateTab("Visuals", 4483362458)
 VisualTab:CreateSection("ESP Settings")
@@ -322,7 +319,7 @@ VisualTab:CreateToggle({
 })
 
 -- ==========================================
--- ABA 6: DEVIL FRUIT (MANAGER)
+-- ABA 3: DEVIL FRUIT (MANAGER)
 -- ==========================================
 local FruitTab = Window:CreateTab("Devil Fruit", 4483362458)
 FruitTab:CreateSection("Automated Fruit Management")
@@ -361,7 +358,7 @@ FruitTab:CreateToggle({
 })
 
 -- ==========================================
--- ABA 7: CONFIG & CREDITS
+-- ABA 4: CONFIG & CREDITS
 -- ==========================================
 local ConfigTab = Window:CreateTab("Config", 4483362458)
 ConfigTab:CreateSection("Server Utils")
@@ -382,4 +379,3 @@ end)
 
 Rayfield:LoadConfiguration()
 Rayfield:Notify({Title = "team Morena do cabelo liso", Content = "Blox Fruit- Matheus Hub", Duration = 5})
-
