@@ -41,7 +41,7 @@ FarmTab:CreateToggle({
         _G.AutoClick = Value
         if FarmModule then FarmModule.StartAutoClick(Value) end
     end,
-    }
+    })
 
     -- ==========================================
 -- ABA 1: AUTO FARM
