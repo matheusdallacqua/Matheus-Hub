@@ -30,21 +30,51 @@ local Window = Rayfield:CreateWindow({
     KeySystem = false
 })
 
--- ==========================================
+
+FarmTab:CreateSection("Combat Settings")
+
+FarmTab:CreateToggle({
+    Name = "Ativar Fast Attack",
+    CurrentValue = false,
+    Callback = function(Value)
+        _G.FastAttack = Value
+        _G.AutoClick = Value
+        if FarmModule then FarmModule.StartAutoClick(Value) end
+    end,
+    }
+
+    -- ==========================================
 -- ABA 1: AUTO FARM
 -- ==========================================
 local FarmTab = Window:CreateTab("Auto Farm", 4483362458)
 
-FarmTab:CreateSection("Main Farm Settings")
+FarmTab:CreateSection("Select Farm Mode")
+
+local FarmModes = {"Level", "Nearest", "Chest", "Bone (Third Sea)"}
+_G.FarmMode = "Level" -- Padrão
+
+FarmTab:CreateDropdown({
+    Name = "Farm Mode",
+    Options = FarmModes,
+    CurrentOption = {"Level"},
+    Callback = function(Value)
+        _G.FarmMode = Value[1]
+    end
+})
 
 FarmTab:CreateToggle({
-    Name = "Auto Farm Level [Active]",
+    Name = "Start Auto Farm",
     CurrentValue = false,
     Callback = function(Value)
-        _G.AutoFarmLevel = Value
-        if FarmModule then FarmModule.StartLevelFarm(Value) end
+        _G.AutoFarm = Value
+        -- Envia para o módulo qual modo foi escolhido
+        if FarmModule then 
+            FarmModule.StartFarm(Value, _G.FarmMode) 
+        end
     end,
 })
+
+FarmTab:CreateSection("Combat Settings")
 
 FarmTab:CreateToggle({
     Name = "Ativar Fast Attack",
@@ -55,7 +85,7 @@ FarmTab:CreateToggle({
         if FarmModule then FarmModule.StartAutoClick(Value) end
     end,
 })
-
+    
 -- ==========================================
 -- ABA 2: FARM CONFIG
 -- ==========================================
