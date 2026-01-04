@@ -212,8 +212,21 @@ FruitTab:CreateToggle({
 FruitTab:CreateToggle({
     Name = "Auto Store Fruits",
     CurrentValue = false,
-    Callback = function(Value) if FruitsModule then FruitsModule.AutoStoreFruit(Value) end end,
+    Callback = function(Value)
+        _G.AutoStoreFruit = Value
+        if Value then
+            task.spawn(function()
+                while _G.AutoStoreFruit do
+                    if FruitsModule and FruitsModule.AutoStore then 
+                        FruitsModule.AutoStore() 
+                    end
+                    task.wait(1) -- Guardar a cada 1 segundo está ótimo
+                end
+            end)
+        end
+    end,
 })
+
 
 -- [[ NA SUA MAIN.LUA - ABA DE FRUTAS ]]
 FruitTab:CreateToggle({
