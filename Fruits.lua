@@ -5,18 +5,19 @@ local FruitModule = {}
 local Remote = game:GetService("ReplicatedStorage").Remotes.CommF_
 local Player = game.Players.LocalPlayer
 
--- [[ 1. BLOX FRUIT GACHA (MÉTODO DIRETO - SEM TELEPORTE) ]]
-function FruitModule.BuyGacha()
-    -- Dispara o sinal direto pro servidor (Igual Banana/Azure/Redz)
+-- [[ 1. BLOX FRUIT GACHA
+function FruitsModule.BuyGacha()
     pcall(function()
-        -- Sea 2 e 3
-        Remote:InvokeServer("BloxFruitGacha", "Roll")
+        -- O comando NOVO que você pegou
+        game:GetService("ReplicatedStorage").Modules.Net["RF/GachaUtilRF"]:InvokeServer({
+            ["Context"] = "getGachaFromBoxName",
+            ["BoxName"] = "SummerWeek5Gacha"
+        })
+        -- Mantém o antigo por segurança (Híbrido)
+        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("Cousin","Buy")
     end)
-    
-    pcall(function()
-        -- Sea 1 (Cousin)
-        Remote:InvokeServer("Cousin", "BuyItem")
-    end)
+end
+
 
     -- Auto Store (Garante que guarda o que girou)
     task.spawn(function()
