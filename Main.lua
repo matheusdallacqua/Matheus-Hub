@@ -110,12 +110,26 @@ FarmTab:CreateToggle({
     end,
 })
 
--- FunÃ§Ã£o de Bater Escondido
+-- AUTO CLICK
 FarmTab:CreateToggle({
     Name = "Auto Clicker / Attack",
-    CurrentValue = true,
+    CurrentValue = false, -- Começa desligado por segurança
     Callback = function(Value)
         _G.AutoClick = Value
+        
+        -- Se o FarmModule foi carregado lá em cima pelo GitHub
+        if FarmModule then
+            -- Se o valor for verdadeiro, liga o clique
+            if Value then
+                FarmModule.StartAutoClick(true)
+            else
+                -- Se for falso, apenas muda a variável para o loop parar
+                _G.AutoClick = false
+            end
+        else
+            -- Aviso caso o módulo do GitHub não tenha carregado
+            Rayfield:Notify({Title = "Erro", Content = "FarmModule não carregado!"})
+        end
     end,
 })
 
