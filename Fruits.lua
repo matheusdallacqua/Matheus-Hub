@@ -33,19 +33,39 @@ function FruitsModule.BuyGacha()
 end
 
 -- === FUNÇÃO AUTO STORE (USANDO SUA LISTA PARA CONFERIR) ===
+
 function FruitsModule.AutoStore()
     pcall(function()
-        local function store(tool)
-            if tool:IsA("Tool") then
-                local toolName = tool.Name
-                -- Verifica se o nome da ferramenta está na sua FruitList
-                local isFruit = false
-                for _, name in pairs(FruitsModule.FruitList) do
-                    if toolName:find(name:split("-")[1]) or tool:GetAttribute("Fruit") then
-                        isFruit = true
-                        break
-                    end
+        -- Função interna para processar a fruta
+        local function processFruit(tool)
+            if tool:IsA("Tool") and (tool:GetAttribute("Fruit") or tool.Name:find("Fruit")) then
+                local fName = tool:GetAttribute("FruitName") or tool.Name
+                
+                -- PASSO 1: Simula o clique que você pegou no Turtle Spy
+                -- Isso avisa o servidor que você está interagindo com a fruta
+                if tool:FindFirstChild("EatRemote") then
+                    tool.EatRemote:InvokeServer("Display")
                 end
+                
+                -- Pequeno delay de 0.1s para o servidor processar o "clique"
+                task.wait(0.1)
+                
+                -- PASSO 2: Manda o comando de guardar oficial
+                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", fName, tool)
+            end
+        end
+
+        -- Primeiro tenta com a fruta que está na mão (Character)
+        local handTool = Player.Character:FindFirstChildWhichIsA("Tool")
+        if handTool then processFruit(handTool) end
+
+        -- Depois varre a mochila (Backpack)
+        for _, v in pairs(Player.Backpack:GetChildren()) do
+            processFruit(v)
+        end
+    end)
+end
+
 
                 if isFruit then
                     -- Usa o nome exato que o Turtle Spy pegou ("StoreFruit")
