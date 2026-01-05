@@ -1,421 +1,410 @@
--- [[ FARM.LUA - MATHEUS HUB 2026 (VERSÃO ULTIMATE) ]]
+-- [[ FARM.LUA - MATHEUS HUB 2026 (VERSÃO REVISADA) ]]
 local FarmModule = {}
 local Player = game.Players.LocalPlayer
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 
--- === INICIALIZAÇÃO DE VARIÁVEIS ===
-if _G.BringMobs == nil then _G.BringMobs = true end
-if _G.FastAttackDelay == nil then _G.FastAttackDelay = 0.1 end
-if _G.SelectWeapon == nil then _G.SelectWeapon = "Melee" end
-if _G.FarmMode == nil then _G.FarmMode = "Level" end
+-- === VARIÁVEIS GLOBAIS ===
+_G.BringMobs = _G.BringMobs or true
+_G.FastAttackDelay = _G.FastAttackDelay or 0.1
+_G.SelectWeapon = _G.SelectWeapon or "Melee"
+_G.FarmMode = _G.FarmMode or "Level"
+_G.AutoFarm = _G.AutoFarm or false
 
--- === TABELA DE QUESTS COMPLETA 2026 ===
+-- === TABELA DE QUESTS (APENAS AS MAIS IMPORTANTES) ===
 local QuestData = {
     ["Sea 1"] = {
-        {Level = 0, Name = "Bandit", QuestName = "BanditQuest1", QuestID = 1, NPC_Pos = CFrame.new(1060, 16, 1547), Mob_Pos = CFrame.new(1145, 17, 1634)},
-        {Level = 10, Name = "Monkey", QuestName = "JungleQuest", QuestID = 1, NPC_Pos = CFrame.new(-1601, 36, 153), Mob_Pos = CFrame.new(-1623, 21, 142)},
-        {Level = 15, Name = "Gorilla", QuestName = "JungleQuest", QuestID = 2, NPC_Pos = CFrame.new(-1601, 36, 153), Mob_Pos = CFrame.new(-1236, 6, -493)},
-        {Level = 30, Name = "Pirate", QuestName = "PiratQuest1", QuestID = 1, NPC_Pos = CFrame.new(-1141, 4, 3827), Mob_Pos = CFrame.new(-1218, 4, 3911)},
-        {Level = 40, Name = "Brute", QuestName = "PiratQuest1", QuestID = 2, NPC_Pos = CFrame.new(-1141, 4, 3827), Mob_Pos = CFrame.new(-1363, 15, 4172)},
-        {Level = 60, Name = "Desert Bandit", QuestName = "DesertQuest", QuestID = 1, NPC_Pos = CFrame.new(895, 6, 4390), Mob_Pos = CFrame.new(1013, 6, 4381)},
-        {Level = 75, Name = "Desert Officer", QuestName = "DesertQuest", QuestID = 2, NPC_Pos = CFrame.new(895, 6, 4390), Mob_Pos = CFrame.new(1542, 14, 4426)},
-        {Level = 90, Name = "Snow Bandit", QuestName = "SnowQuest", QuestID = 1, NPC_Pos = CFrame.new(1387, 15, -1300), Mob_Pos = CFrame.new(1287, 15, -1336)},
-        {Level = 100, Name = "Snowman", QuestName = "SnowQuest", QuestID = 2, NPC_Pos = CFrame.new(1387, 15, -1300), Mob_Pos = CFrame.new(1281, 15, -1071)},
-        {Level = 120, Name = "Chief Petty Officer", QuestName = "MarineQuest1", QuestID = 1, NPC_Pos = CFrame.new(-4855, 23, 4338), Mob_Pos = CFrame.new(-4839, 6, 4367)},
-        {Level = 150, Name = "Sky Bandit", QuestName = "SkyQuest", QuestID = 1, NPC_Pos = CFrame.new(-1240, 358, -5913), Mob_Pos = CFrame.new(-1246, 393, -5943)},
-        {Level = 175, Name = "Dark Master", QuestName = "SkyQuest", QuestID = 2, NPC_Pos = CFrame.new(-1240, 358, -5913), Mob_Pos = CFrame.new(-1144, 391, -6161)},
-        {Level = 225, Name = "Toga Warrior", QuestName = "ColosseumQuest", QuestID = 1, NPC_Pos = CFrame.new(-1580, 7, -2982), Mob_Pos = CFrame.new(-1805, 7, -2745)},
-        {Level = 250, Name = "Gladiator", QuestName = "ColosseumQuest", QuestID = 2, NPC_Pos = CFrame.new(-1580, 7, -2982), Mob_Pos = CFrame.new(-1805, 7, -3317)},
-        {Level = 300, Name = "Military Soldier", QuestName = "MagmaQuest", QuestID = 1, NPC_Pos = CFrame.new(-5314, 12, 8516), Mob_Pos = CFrame.new(-5414, 11, 8479)},
-        {Level = 325, Name = "Military Spy", QuestName = "MagmaQuest", QuestID = 2, NPC_Pos = CFrame.new(-5314, 12, 8516), Mob_Pos = CFrame.new(-5816, 73, 8456)},
-        {Level = 375, Name = "Fishman Warrior", QuestName = "FishmanQuest", QuestID = 1, NPC_Pos = CFrame.new(61122, 18, 1569), Mob_Pos = CFrame.new(60907, 18, 1546)},
-        {Level = 400, Name = "Fishman Commando", QuestName = "FishmanQuest", QuestID = 2, NPC_Pos = CFrame.new(61122, 18, 1569), Mob_Pos = CFrame.new(61793, 18, 1450)},
-        {Level = 450, Name = "God's Guard", QuestName = "UpperSkyQuest1", QuestID = 1, NPC_Pos = CFrame.new(-5707, 712, -7677), Mob_Pos = CFrame.new(-5820, 712, -7814)},
-        {Level = 475, Name = "Shanda", QuestName = "UpperSkyQuest1", QuestID = 2, NPC_Pos = CFrame.new(-5707, 712, -7677), Mob_Pos = CFrame.new(-5552, 712, -7782)},
-        {Level = 525, Name = "Royal Squad", QuestName = "UpperSkyQuest2", QuestID = 1, NPC_Pos = CFrame.new(-6006, 1593, -4905), Mob_Pos = CFrame.new(-5890, 1593, -4914)},
-        {Level = 550, Name = "Royal Soldier", QuestName = "UpperSkyQuest2", QuestID = 2, NPC_Pos = CFrame.new(-6006, 1593, -4905), Mob_Pos = CFrame.new(-6194, 1593, -4783)},
-        {Level = 625, Name = "Galley Pirate", QuestName = "FountainQuest", QuestID = 1, NPC_Pos = CFrame.new(5256, 38, 4050), Mob_Pos = CFrame.new(5426, 38, 3968)},
-        {Level = 650, Name = "Galley Captain", QuestName = "FountainQuest", QuestID = 2, NPC_Pos = CFrame.new(5256, 38, 4050), Mob_Pos = CFrame.new(5663, 38, 4479)},
+        {Level = 0, Name = "Bandit", QuestName = "BanditQuest", QuestID = 1, NPC_Pos = CFrame.new(1059.43872, 16.4550362, 1548.71362), Mob_Pos = CFrame.new(1145, 17, 1634)},
+        {Level = 10, Name = "Monkey", QuestName = "JungleQuest", QuestID = 1, NPC_Pos = CFrame.new(-1601.6553955078, 36.852127075195, 154.23783874512), Mob_Pos = CFrame.new(-1623, 21, 142)},
+        {Level = 15, Name = "Gorilla", QuestName = "JungleQuest", QuestID = 2, NPC_Pos = CFrame.new(-1601.6553955078, 36.852127075195, 154.23783874512), Mob_Pos = CFrame.new(-1236, 6, -493)},
+        {Level = 30, Name = "Pirate", QuestName = "PirateQuest", QuestID = 1, NPC_Pos = CFrame.new(-1141.07483, 4.10001802, 3831.5498), Mob_Pos = CFrame.new(-1218, 4, 3911)},
+        {Level = 40, Name = "Brute", QuestName = "PirateQuest", QuestID = 2, NPC_Pos = CFrame.new(-1141.07483, 4.10001802, 3831.5498), Mob_Pos = CFrame.new(-1363, 15, 4172)},
+        {Level = 60, Name = "Desert Bandit", QuestName = "DesertQuest", QuestID = 1, NPC_Pos = CFrame.new(895.411987, 6.43832159, 4390.43311), Mob_Pos = CFrame.new(1013, 6, 4381)},
+        {Level = 75, Name = "Desert Officer", QuestName = "DesertQuest", QuestID = 2, NPC_Pos = CFrame.new(895.411987, 6.43832159, 4390.43311), Mob_Pos = CFrame.new(1542, 14, 4426)},
+        {Level = 90, Name = "Snow Bandit", QuestName = "SnowQuest", QuestID = 1, NPC_Pos = CFrame.new(1387.80737, 87.272789, -1298.35767), Mob_Pos = CFrame.new(1287, 15, -1336)},
+        {Level = 100, Name = "Snowman", QuestName = "SnowQuest", QuestID = 2, NPC_Pos = CFrame.new(1387.80737, 87.272789, -1298.35767), Mob_Pos = CFrame.new(1281, 15, -1071)},
+        {Level = 120, Name = "Chief Petty Officer", QuestName = "MarineQuest", QuestID = 1, NPC_Pos = CFrame.new(-4855.66113, 20.6520939, 4304.4502), Mob_Pos = CFrame.new(-4839, 6, 4367)},
+        {Level = 150, Name = "Sky Bandit", QuestName = "SkyQuest", QuestID = 1, NPC_Pos = CFrame.new(-4842.3422851563, 717.66949462891, -2623.0043945313), Mob_Pos = CFrame.new(-1246, 393, -5943)},
+        {Level = 175, Name = "Dark Master", QuestName = "SkyQuest", QuestID = 2, NPC_Pos = CFrame.new(-4842.3422851563, 717.66949462891, -2623.0043945313), Mob_Pos = CFrame.new(-1144, 391, -6161)},
+        {Level = 225, Name = "Toga Warrior", QuestName = "ColosseumQuest", QuestID = 1, NPC_Pos = CFrame.new(-1577.79248, 7.41514206, -2984.57983), Mob_Pos = CFrame.new(-1805, 7, -2745)},
+        {Level = 250, Name = "Gladiator", QuestName = "ColosseumQuest", QuestID = 2, NPC_Pos = CFrame.new(-1577.79248, 7.41514206, -2984.57983), Mob_Pos = CFrame.new(-1805, 7, -3317)},
+        {Level = 300, Name = "Military Soldier", QuestName = "MagmaQuest", QuestID = 1, NPC_Pos = CFrame.new(-5314.6591796875, 12.26210975647, 8516.3876953125), Mob_Pos = CFrame.new(-5414, 11, 8479)},
+        {Level = 325, Name = "Military Spy", QuestName = "MagmaQuest", QuestID = 2, NPC_Pos = CFrame.new(-5314.6591796875, 12.26210975647, 8516.3876953125), Mob_Pos = CFrame.new(-5816, 73, 8456)},
+        {Level = 375, Name = "Fishman Warrior", QuestName = "FishmanQuest", QuestID = 1, NPC_Pos = CFrame.new(61122.5625, 18.4716396, 1568.79834), Mob_Pos = CFrame.new(60907, 18, 1546)},
+        {Level = 400, Name = "Fishman Commando", QuestName = "FishmanQuest", QuestID = 2, NPC_Pos = CFrame.new(61122.5625, 18.4716396, 1568.79834), Mob_Pos = CFrame.new(61793, 18, 1450)},
     }
 }
 
--- === VARIÁVEIS DE THREAD ===
-local FarmThread = nil
+-- === THREADS ===
+local MainFarmThread = nil
 local ClickThread = nil
-local MagnetThread = nil
 
--- === FUNÇÃO: SMOOTH TWEEN (OTIMIZADA) ===
-local function SmoothTween(TargetCFrame)
-    local Character = Player.Character
-    if not Character or not Character:FindFirstChild("HumanoidRootPart") then 
-        return false 
-    end
-    
-    local Root = Character.HumanoidRootPart
-    local Distance = (Root.Position - TargetCFrame.Position).Magnitude
-    
-    -- Se já está perto, teleporta direto
-    if Distance < 25 then
-        Root.CFrame = TargetCFrame
-        return true
-    end
-    
-    -- Cria e executa tween
-    local TweenInfo = TweenInfo.new(
-        Distance / 250,  -- Velocidade balanceada
-        Enum.EasingStyle.Linear,
-        Enum.EasingDirection.InOut,
-        0,  -- RepeatCount
-        false,  -- Reverses
-        0   -- DelayTime
-    )
-    
-    local Tween = TweenService:Create(Root, TweenInfo, {CFrame = TargetCFrame})
-    
-    local Completed = false
-    local Connection
-    Connection = Tween.Completed:Connect(function()
-        Completed = true
-        if Connection then Connection:Disconnect() end
-    end)
-    
-    Tween:Play()
-    
-    -- Timeout de segurança
-    local StartTime = tick()
-    while not Completed and (tick() - StartTime) < 15 do
-        if not _G.AutoFarm then
-            Tween:Cancel()
-            return false
-        end
-        task.wait()
-    end
-    
-    if not Completed then
-        Tween:Cancel()
-        Root.CFrame = TargetCFrame
-    end
-    
-    return true
-end
+-- === FUNÇÕES AUXILIARES CORRIGIDAS ===
 
--- === FUNÇÃO: MAGNET SYSTEM (OTIMIZADO) ===
-local function Magnet(TargetMob)
-    if not _G.BringMobs or not TargetMob or not TargetMob:FindFirstChild("HumanoidRootPart") then 
-        return 
-    end
-    
-    pcall(function()
-        local Character = Player.Character
-        if not Character or not Character:FindFirstChild("HumanoidRootPart") then return end
-        
-        local PlayerPos = Character.HumanoidRootPart.Position
-        local TargetPos = TargetMob.HumanoidRootPart.Position
-        
-        -- Raio do magnet (configurável)
-        local MagnetRadius = 200
-        
-        for _, Mob in pairs(game.Workspace.Enemies:GetChildren()) do
-            if Mob.Name == TargetMob.Name and Mob:FindFirstChild("HumanoidRootPart") and Mob.Humanoid.Health > 0 then
-                local MobPos = Mob.HumanoidRootPart.Position
-                local Distance = (MobPos - PlayerPos).Magnitude
-                
-                if Distance < MagnetRadius then
-                    -- Configurações anti-detection
-                    Mob.HumanoidRootPart.CanCollide = false
-                    Mob.HumanoidRootPart.Velocity = Vector3.zero
-                    Mob.HumanoidRootPart.RotVelocity = Vector3.zero
-                    
-                    -- Calcula direção suave
-                    local Direction = (TargetPos - MobPos).Unit
-                    local MoveSpeed = 15
-                    
-                    -- Aplica movimento suave
-                    Mob.HumanoidRootPart.CFrame = Mob.HumanoidRootPart.CFrame + (Direction * MoveSpeed)
-                    
-                    -- Anti-stuck: pequeno impulso vertical se estiver preso
-                    if Mob.HumanoidRootPart.Position.Y < 0 then
-                        Mob.HumanoidRootPart.CFrame = Mob.HumanoidRootPart.CFrame + Vector3.new(0, 5, 0)
-                    end
-                end
-            end
-        end
-    end)
-end
-
--- === FUNÇÃO: FAST ATTACK & AUTO CLICK (OTIMIZADO) ===
-function FarmModule.StartAutoClick(Toggle)
-    _G.AutoClick = Toggle
-    
-    -- Mata thread anterior se existir
-    if ClickThread then
-        task.cancel(ClickThread)
-        ClickThread = nil
-    end
-    
-    if not Toggle then return end
-    
-    ClickThread = task.spawn(function()
-        local VirtualUser = game:GetService('VirtualUser')
-        local LastAttack = 0
-        
-        while _G.AutoClick do
-            local CurrentTime = tick()
-            
-            -- Sistema de cooldown baseado no delay configurado
-            if (CurrentTime - LastAttack) >= (_G.FastAttackDelay or 0.1) then
-                pcall(function()
-                    if Player.Character and Player.Character:FindFirstChildOfClass("Tool") then
-                        VirtualUser:CaptureController()
-                        
-                        -- Simula clique real
-                        VirtualUser:Button1Down(Vector2.new(0, 0))
-                        task.wait(0.01)
-                        VirtualUser:Button1Up(Vector2.new(0, 0))
-                        
-                        LastAttack = CurrentTime
-                    end
-                end)
-            end
-            
-            task.wait(0.03) -- Loop principal mais rápido
-        end
-    end)
-end
-
--- === FUNÇÃO: EQUIP WEAPON (INTELIGENTE) ===
-function FarmModule.EquipWeapon()
-    pcall(function()
-        local WeaponName = _G.SelectWeapon
-        if not WeaponName then return end
-        
-        local Character = Player.Character
-        if not Character then return end
-        
-        -- Verifica se já está equipada
-        for _, Tool in pairs(Character:GetChildren()) do
-            if Tool:IsA("Tool") and Tool.Name == WeaponName then
-                return true -- Já equipada
-            end
-        end
-        
-        -- Procura na mochila
-        local Tool = Player.Backpack:FindFirstChild(WeaponName)
-        if Tool then
-            -- Delay antes de equipar (evita spam)
-            task.wait(0.1)
-            Character.Humanoid:EquipTool(Tool)
-            return true
-        end
-        
-        return false -- Arma não encontrada
-    end)
-end
-
--- === FUNÇÃO: GET CURRENT QUEST ===
+-- 1. GET CURRENT QUEST (CORRIGIDA)
 local function GetCurrentQuest()
-    pcall(function()
-        local MyLevel = Player.Data.Level.Value
-        local SelectedQuest = nil
-        
-        for _, Quest in ipairs(QuestData["Sea 1"]) do
-            if MyLevel >= Quest.Level then
-                SelectedQuest = Quest
-            else
-                break
-            end
-        end
-        
-        return SelectedQuest
-    end)
+    local myLevel = Player.Data.Level.Value
+    local lastValid = QuestData["Sea 1"][1]
     
-    return nil
+    for _, quest in ipairs(QuestData["Sea 1"]) do
+        if myLevel >= quest.Level then
+            lastValid = quest
+        else
+            break
+        end
+    end
+    
+    return lastValid
 end
 
--- === FUNÇÃO: CHECK IF HAS QUEST ===
-local function HasQuest(QuestName, QuestID)
-    local PlayerGui = Player.PlayerGui
-    if not PlayerGui then return false end
+-- 2. CHECK QUEST (CORRIGIDA)
+local function HasQuest(questName, questId)
+    local playerGui = Player.PlayerGui
+    if not playerGui then return false end
     
-    local MainGui = PlayerGui:FindFirstChild("Main")
-    if not MainGui then return false end
+    local main = playerGui:FindFirstChild("Main")
+    if not main then return false end
     
-    local QuestFrame = MainGui:FindFirstChild("Quest")
-    if not QuestFrame then return false end
+    local questFrame = main:FindFirstChild("Quest")
+    if not questFrame or not questFrame.Visible then return false end
     
-    if QuestFrame.Visible then
-        local QuestText = QuestFrame:FindFirstChild("QuestName")
-        if QuestText then
-            return QuestText.Text:find(QuestName) ~= nil
+    -- Verifica tanto nome quanto ID
+    local questTitle = questFrame:FindFirstChild("QuestName")
+    local questIdText = questFrame:FindFirstChild("QuestNumber")
+    
+    if questTitle then
+        local hasName = string.find(questTitle.Text, questName) ~= nil
+        local hasId = true
+        
+        if questIdText then
+            hasId = string.find(questIdText.Text, tostring(questId)) ~= nil
         end
+        
+        return hasName and hasId
     end
     
     return false
 end
 
--- === FUNÇÃO: START FARM (PRINCIPAL) ===
-function FarmModule.StartFarm(Toggle, Mode)
-    _G.FarmMode = Mode or "Level"
-    _G.AutoFarm = Toggle
-    
-    -- Mata thread anterior
-    if FarmThread then
-        task.cancel(FarmThread)
-        FarmThread = nil
+-- 3. SMOOTH TWEEN (MELHORADA)
+local function SmoothTween(targetCFrame)
+    local character = Player.Character
+    if not character or not character:FindFirstChild("HumanoidRootPart") then 
+        return false 
     end
     
-    if not Toggle then 
+    local root = character.HumanoidRootPart
+    local distance = (root.Position - targetCFrame.Position).Magnitude
+    
+    -- Se já está perto (50 studs), teleporta direto
+    if distance < 50 then
+        root.CFrame = targetCFrame
+        return true
+    end
+    
+    -- Velocidade dinâmica
+    local speed = 250
+    if distance > 1000 then speed = 300 end
+    if distance > 3000 then speed = 350 end
+    
+    local tweenInfo = TweenInfo.new(distance / speed, Enum.EasingStyle.Linear)
+    local tween = TweenService:Create(root, tweenInfo, {CFrame = targetCFrame})
+    
+    tween:Play()
+    
+    -- Espera o tween completar ou timeout
+    local startTime = tick()
+    while tick() - startTime < 30 do  -- Timeout de 30 segundos
+        if not _G.AutoFarm then
+            tween:Cancel()
+            return false
+        end
+        
+        -- Verifica se chegou perto o suficiente
+        local currentDist = (root.Position - targetCFrame.Position).Magnitude
+        if currentDist < 25 then
+            tween:Cancel()
+            root.CFrame = targetCFrame
+            return true
+        end
+        
+        task.wait(0.1)
+    end
+    
+    tween:Cancel()
+    root.CFrame = targetCFrame
+    return true
+end
+
+-- 4. MAGNET SEGURO (REVISADO)
+local function SafeMagnet(targetMob)
+    if not _G.BringMobs or not targetMob then return end
+    
+    pcall(function()
+        local character = Player.Character
+        if not character or not character:FindFirstChild("HumanoidRootPart") then return end
+        
+        local playerPos = character.HumanoidRootPart.Position
+        
+        for _, mob in pairs(game.Workspace.Enemies:GetChildren()) do
+            if mob.Name == targetMob.Name and mob:FindFirstChild("HumanoidRootPart") and mob.Humanoid.Health > 0 then
+                local mobPos = mob.HumanoidRootPart.Position
+                local distance = (mobPos - playerPos).Magnitude
+                
+                -- Só ativa magnet se estiver entre 20 e 100 studs
+                if distance > 20 and distance < 100 then
+                    -- Move suavemente (não teleporta bruscamente)
+                    local direction = (playerPos - mobPos).Unit
+                    mob.HumanoidRootPart.CFrame = mob.HumanoidRootPart.CFrame + (direction * 5)
+                    
+                    -- Desativa colisão temporariamente
+                    mob.HumanoidRootPart.CanCollide = false
+                end
+            end
+        end
+    end)
+end
+
+-- 5. EQUIP WEAPON SIMPLIFICADA
+local function EquipWeapon()
+    pcall(function()
+        local weaponName = _G.SelectWeapon
+        if not weaponName then return end
+        
+        -- Procura na mochila
+        local tool = Player.Backpack:FindFirstChild(weaponName)
+        if tool then
+            Player.Character.Humanoid:EquipTool(tool)
+            task.wait(0.2) -- Pequeno delay após equipar
+            return true
+        end
+        
+        -- Verifica se já está equipada
+        for _, v in pairs(Player.Character:GetChildren()) do
+            if v:IsA("Tool") and v.Name == weaponName then
+                return true
+            end
+        end
+        
+        return false
+    end)
+end
+
+-- === SISTEMA DE AUTO CLICK (MELHORADO) ===
+function FarmModule.StartAutoClick(toggle)
+    _G.AutoClick = toggle
+    
+    -- Mata thread anterior
+    if ClickThread then
+        task.cancel(ClickThread)
+        ClickThread = nil
+    end
+    
+    if not toggle then return end
+    
+    ClickThread = task.spawn(function()
+        local virtualUser = game:GetService('VirtualUser')
+        
+        while _G.AutoClick do
+            pcall(function()
+                if Player.Character and Player.Character:FindFirstChildOfClass("Tool") then
+                    virtualUser:CaptureController()
+                    virtualUser:Button1Down(Vector2.new(0, 0))
+                    task.wait(0.01)
+                    virtualUser:Button1Up(Vector2.new(0, 0))
+                end
+            end)
+            
+            -- Delay configurável
+            task.wait(_G.FastAttackDelay or 0.1)
+        end
+    end)
+end
+
+-- === SISTEMA PRINCIPAL DE FARM (REESCRITO) ===
+function FarmModule.StartFarm(toggle, mode)
+    _G.FarmMode = mode or "Level"
+    _G.AutoFarm = toggle
+    
+    -- Para thread anterior
+    if MainFarmThread then
+        task.cancel(MainFarmThread)
+        MainFarmThread = nil
+    end
+    
+    if not toggle then 
         FarmModule.StartAutoClick(false)
+        print("[FARM] Auto Farm desativado")
         return 
     end
     
-    FarmThread = task.spawn(function()
+    print("[FARM] Iniciando Auto Farm no modo:", _G.FarmMode)
+    
+    MainFarmThread = task.spawn(function()
+        local attemptCount = 0
+        
         while _G.AutoFarm do
-            task.wait(0.1)
+            task.wait(0.5) -- Loop principal mais lento
             
             pcall(function()
-                local Character = Player.Character
-                if not Character or not Character:FindFirstChild("HumanoidRootPart") then
-                    task.wait(1)
+                -- Verifica se personagem está válido
+                local character = Player.Character
+                if not character or not character:FindFirstChild("HumanoidRootPart") then
+                    print("[FARM] Esperando personagem carregar...")
+                    task.wait(2)
                     return
                 end
                 
-                local MyLevel = Player.Data.Level.Value
-                local CurrentQuest = GetCurrentQuest()
-                
-                if not CurrentQuest then
-                    print("[FARM] Nenhuma quest encontrada para o nível", MyLevel)
-                    task.wait(3)
+                -- SELEÇÃO DE MODO
+                if _G.FarmMode == "Nearest" then
+                    FarmModule.StartNearestFarm()
                     return
                 end
                 
-                -- VERIFICA SE TEM QUEST
-                local HasActiveQuest = HasQuest(CurrentQuest.QuestName, CurrentQuest.QuestID)
+                -- MODO LEVEL (PRINCIPAL)
+                local currentQuest = GetCurrentQuest()
+                if not currentQuest then
+                    print("[FARM] Nenhuma quest disponível para o nível atual")
+                    task.wait(5)
+                    return
+                end
                 
-                if not HasActiveQuest then
-                    -- VAI PEGAR QUEST
+                -- VERIFICA SE TEM A QUEST
+                local hasQuest = HasQuest(currentQuest.QuestName, currentQuest.QuestID)
+                
+                if not hasQuest then
+                    print("[FARM] Indo pegar quest:", currentQuest.QuestName, currentQuest.QuestID)
+                    
+                    -- Desliga auto click enquanto pega quest
                     FarmModule.StartAutoClick(false)
                     
-                    if SmoothTween(CurrentQuest.NPC_Pos) then
-                        local Args = {"StartQuest", CurrentQuest.QuestName, CurrentQuest.QuestID}
-                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(Args))
+                    -- Vai até o NPC
+                    if SmoothTween(currentQuest.NPC_Pos) then
+                        -- Aceita a quest
+                        local args = {"StartQuest", currentQuest.QuestName, currentQuest.QuestID}
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args))
                         
-                        -- Espera a quest ser aceita
-                        for i = 1, 30 do -- 3 segundos de timeout
-                            if HasQuest(CurrentQuest.QuestName, CurrentQuest.QuestID) then
+                        -- Espera a quest aparecer
+                        for i = 1, 10 do
+                            if HasQuest(currentQuest.QuestName, currentQuest.QuestID) then
+                                print("[FARM] Quest aceita com sucesso!")
                                 break
                             end
-                            task.wait(0.1)
+                            task.wait(0.5)
                         end
                     end
-                else
-                    -- PROCURA MOB DA QUEST
-                    local TargetMob = game.Workspace.Enemies:FindFirstChild(CurrentQuest.Name)
                     
-                    if TargetMob and TargetMob:FindFirstChild("HumanoidRootPart") and TargetMob.Humanoid.Health > 0 then
-                        -- MOB ENCONTRADO - ATACA
-                        FarmModule.EquipWeapon()
+                else
+                    -- PROCURA O MOB DA QUEST
+                    local targetMob = game.Workspace.Enemies:FindFirstChild(currentQuest.Name)
+                    
+                    if targetMob and targetMob:FindFirstChild("HumanoidRootPart") and targetMob.Humanoid.Health > 0 then
+                        print("[FARM] Atacando:", currentQuest.Name)
+                        
+                        -- Equipa arma e ativa auto click
+                        EquipWeapon()
                         FarmModule.StartAutoClick(true)
                         
-                        -- ATIVA MAGNET SE CONFIGURADO
+                        -- Ativa magnet se configurado
                         if _G.BringMobs then
-                            Magnet(TargetMob)
+                            SafeMagnet(targetMob)
                         end
                         
-                        -- POSICIONAMENTO INTELIGENTE
-                        local MobPos = TargetMob.HumanoidRootPart.CFrame
-                        local SafeDistance = 15
+                        -- Posicionamento inteligente
+                        local mobPos = targetMob.HumanoidRootPart.CFrame
+                        local safeDistance = 10 -- Distância segura
                         
-                        -- Evita ficar em cima do mob
-                        local AttackPosition = MobPos * CFrame.new(0, SafeDistance, 0)
+                        -- Calcula posição de ataque
+                        local attackPos = mobPos * CFrame.new(0, safeDistance, 0)
                         
                         -- Aplica rotação para ficar de frente
-                        local LookVector = (MobPos.Position - Character.HumanoidRootPart.Position).Unit
-                        AttackPosition = CFrame.new(AttackPosition.Position, AttackPosition.Position + LookVector)
+                        local lookVector = (mobPos.Position - character.HumanoidRootPart.Position).Unit
+                        attackPos = CFrame.new(attackPos.Position, attackPos.Position + lookVector)
                         
-                        Character.HumanoidRootPart.CFrame = AttackPosition
+                        -- Aplica posição
+                        character.HumanoidRootPart.CFrame = attackPos
+                        
+                        attemptCount = 0 -- Reseta contador de tentativas
                         
                     else
-                        -- MOB NÃO ENCONTRADO - VAI PARA SPAWN
+                        -- MOB NÃO ENCONTRADO
+                        print("[FARM] Mob não encontrado, indo para spawn...")
                         FarmModule.StartAutoClick(false)
-                        SmoothTween(CurrentQuest.Mob_Pos)
-                        task.wait(1) -- Espera mob spawnar
+                        
+                        attemptCount = attemptCount + 1
+                        
+                        -- Se tentou muitas vezes, verifica se ainda tem a quest
+                        if attemptCount >= 5 then
+                            print("[FARM] Verificando status da quest...")
+                            if not HasQuest(currentQuest.QuestName, currentQuest.QuestID) then
+                                attemptCount = 0 -- Reseta se perdeu a quest
+                            end
+                        end
+                        
+                        -- Vai para o spawn do mob
+                        SmoothTween(currentQuest.Mob_Pos)
+                        task.wait(2) -- Espera mob spawnar
                     end
                 end
             end)
         end
         
-        -- LIMPEZA QUANDO DESATIVA
+        -- LIMPEZA AO FINAL
         FarmModule.StartAutoClick(false)
+        print("[FARM] Thread principal finalizada")
     end)
 end
 
--- === FUNÇÃO: FIND NEAREST ENEMY ===
-function FarmModule.FindNearestEnemy()
-    local Character = Player.Character
-    if not Character or not Character:FindFirstChild("HumanoidRootPart") then
-        return nil
-    end
-    
-    local PlayerPos = Character.HumanoidRootPart.Position
-    local NearestEnemy = nil
-    local NearestDistance = math.huge
-    
-    pcall(function()
-        for _, Enemy in pairs(game.Workspace.Enemies:GetChildren()) do
-            if Enemy:FindFirstChild("HumanoidRootPart") and Enemy.Humanoid.Health > 0 then
-                local Distance = (Enemy.HumanoidRootPart.Position - PlayerPos).Magnitude
-                
-                if Distance < NearestDistance then
-                    NearestDistance = Distance
-                    NearestEnemy = Enemy
-                end
-            end
-        end
-    end)
-    
-    return NearestEnemy, NearestDistance
-end
-
--- === FUNÇÃO: FARM MODE NEAREST ===
-function FarmModule.StartNearestFarm(Toggle)
-    if not Toggle then return end
-    
+-- === MODO NEAREST (SIMPLIFICADO) ===
+function FarmModule.StartNearestFarm()
     task.spawn(function()
         while _G.AutoFarm and _G.FarmMode == "Nearest" do
-            task.wait(0.1)
+            task.wait(0.5)
             
             pcall(function()
-                local NearestEnemy, Distance = FarmModule.FindNearestEnemy()
+                local character = Player.Character
+                if not character or not character:FindFirstChild("HumanoidRootPart") then return end
                 
-                if NearestEnemy then
-                    FarmModule.EquipWeapon()
+                local playerPos = character.HumanoidRootPart.Position
+                local nearestEnemy = nil
+                local nearestDistance = math.huge
+                
+                -- Procura inimigo mais próximo
+                for _, enemy in pairs(game.Workspace.Enemies:GetChildren()) do
+                    if enemy:FindFirstChild("HumanoidRootPart") and enemy.Humanoid.Health > 0 then
+                        local distance = (enemy.HumanoidRootPart.Position - playerPos).Magnitude
+                        if distance < nearestDistance then
+                            nearestDistance = distance
+                            nearestEnemy = enemy
+                        end
+                    end
+                end
+                
+                if nearestEnemy then
+                    -- Equipa e ataca
+                    EquipWeapon()
                     FarmModule.StartAutoClick(true)
                     
                     if _G.BringMobs then
-                        Magnet(NearestEnemy)
+                        SafeMagnet(nearestEnemy)
                     end
                     
-                    local Character = Player.Character
-                    if Character and Character.HumanoidRootPart then
-                        local AttackPos = NearestEnemy.HumanoidRootPart.CFrame * CFrame.new(0, 10, 0)
-                        Character.HumanoidRootPart.CFrame = AttackPos
-                    end
+                    -- Posiciona
+                    local attackPos = nearestEnemy.HumanoidRootPart.CFrame * CFrame.new(0, 10, 0)
+                    character.HumanoidRootPart.CFrame = attackPos
                 else
                     FarmModule.StartAutoClick(false)
-                    task.wait(1)
                 end
             end)
         end
     end)
 end
 
--- === FUNÇÃO: STOP ALL FARM ===
+-- === FUNÇÃO DE PARADA ===
 function FarmModule.StopAll()
-    if FarmThread then
-        task.cancel(FarmThread)
-        FarmThread = nil
+    if MainFarmThread then
+        task.cancel(MainFarmThread)
+        MainFarmThread = nil
     end
     
     if ClickThread then
@@ -426,20 +415,8 @@ function FarmModule.StopAll()
     _G.AutoFarm = false
     _G.AutoClick = false
     
-    print("[FARM] Todos os sistemas parados")
+    print("[FARM] Todos os sistemas parados com sucesso")
+    return true
 end
-
--- === INICIALIZAÇÃO AUTOMÁTICA ===
-task.spawn(function()
-    while true do
-        if _G.AutoFarm then
-            -- Verifica se o modo de farm mudou
-            if _G.FarmMode == "Nearest" then
-                FarmModule.StartNearestFarm(true)
-            end
-        end
-        task.wait(5)
-    end
-end)
 
 return FarmModule
