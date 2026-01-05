@@ -1,17 +1,25 @@
-
--- [[ FARM.LUA - APENAS SEA 1 COM TELEPORTE SUAVE ]]
+-- [[ FARM.LUA - VERSÃO ESTÁVEL SEM BUGS ]]
 local FarmModule = {}
 local Player = game.Players.LocalPlayer
 local TweenService = game:GetService("TweenService")
 
--- === VARIÁVEIS GLOBAIS ===
+-- === VARIÁVEIS DE CONTROLE ===
 _G.BringMobs = _G.BringMobs or true
-_G.FastAttackDelay = _G.FastAttackDelay or 0.1
+_G.FastAttackDelay = _G.FastAttackDelay or 0.2
 _G.SelectWeapon = _G.SelectWeapon or "Melee"
 _G.FarmMode = _G.FarmMode or "Level"
 _G.AutoFarm = _G.AutoFarm or false
 
--- === TABELA DE QUESTS SEA 1 (COMPLETA) ===
+-- Configurações ajustáveis
+local Config = {
+    AttackDistance = 15,  -- Distância para atacar
+    MagnetRadius = 100,   -- Raio do magnet
+    TweenSpeed = 150,     -- Velocidade do tween (mais lento)
+    MinTweenTime = 1,     -- Tempo mínimo do tween
+    MaxTweenTime = 10,    -- Tempo máximo do tween
+}
+
+-- === TABELA DE QUESTS SEA 1 ===
 local QuestData = {
     ["Sea 1"] = {
         {Level = 0, Name = "Bandit", QuestName = "BanditQuest1", QuestID = 1, NPC_Pos = CFrame.new(1060, 16, 1547), Mob_Pos = CFrame.new(1145, 17, 1634)},
@@ -44,9 +52,17 @@ local QuestData = {
 -- === THREADS ===
 local MainFarmThread = nil
 local ClickThread = nil
+local CurrentTween = nil
 
--- === FUNÇÃO: TELEPORTE 100% SUAVE (SEM TP EM CIMA) ===
-local function SmoothTween(targetCFrame)
+-- === FUNÇÃO: TELEPORTE ESTÁVEL (SEM "QUICAR") ===
+local function StableTween(targetCFrame)
+    -- Cancela tween anterior se existir
+    if CurrentTween then
+        CurrentTween:Cancel()
+        CurrentTween = nil
+        task.wait(0.1)
+    end
+    
     local character = Player.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then 
         return false 
@@ -55,86 +71,80 @@ local function SmoothTween(targetCFrame)
     local root = character.HumanoidRootPart
     local distance = (root.Position - targetCFrame.Position).Magnitude
     
-    -- **REMOVI O TELEPORTE DIRETO!** Sempre usa tween agora
-    -- Mesmo para distâncias curtas, usa tween
+    -- Se já está muito perto (10 studs), não faz tween
+    if distance < 10 then
+        return true
+    end
     
-    -- Velocidade ajustável
-    local speed = 200 -- studs por segundo
+    -- Calcula tempo do tween (mais lento para evitar bugs)
+    local travelTime = distance / Config.TweenSpeed
+    travelTime = math.max(Config.MinTweenTime, math.min(travelTime, Config.MaxTweenTime))
     
-    -- Calcula tempo baseado na distância
-    local travelTime = distance / speed
+    -- Ajusta altura do target (evita ficar no chão)
+    local adjustedCFrame = targetCFrame + Vector3.new(0, 5, 0)
     
-    -- Tempo mínimo de 0.5 segundos, máximo de 15 segundos
-    travelTime = math.max(0.5, math.min(travelTime, 15))
-    
-    -- Cria o tween
+    -- Cria tween simples
     local tweenInfo = TweenInfo.new(
         travelTime,
-        Enum.EasingStyle.Linear,
-        Enum.EasingDirection.InOut,
-        0,      -- RepeatCount
-        false,  -- Reverses
-        0       -- DelayTime
+        Enum.EasingStyle.Linear
     )
     
-    local tween = TweenService:Create(root, tweenInfo, {CFrame = targetCFrame})
+    local tween = TweenService:Create(root, tweenInfo, {CFrame = adjustedCFrame})
+    CurrentTween = tween
     
-    -- Conecta eventos
-    local connection
-    local completed = false
-    
-    connection = tween.Completed:Connect(function()
-        completed = true
-        if connection then connection:Disconnect() end
-    end)
-    
-    -- Inicia o tween
+    -- Inicia tween
     tween:Play()
     
-    -- Espera completar com timeout
+    -- Espera de forma simples
     local startTime = tick()
-    while not completed and (tick() - startTime) < (travelTime + 5) do -- Timeout extra
+    while tick() - startTime < travelTime + 2 do
         if not _G.AutoFarm then
             tween:Cancel()
+            CurrentTween = nil
             return false
         end
+        
+        -- Verifica se chegou perto o suficiente
+        local currentDist = (root.Position - targetCFrame.Position).Magnitude
+        if currentDist < 15 then
+            tween:Cancel()
+            root.CFrame = adjustedCFrame
+            CurrentTween = nil
+            return true
+        end
+        
         task.wait(0.1)
     end
     
-    -- Se não completou, força posição final
-    if not completed then
-        tween:Cancel()
-        root.CFrame = targetCFrame
-    end
-    
-    -- Pequeno delay após teleporte
-    task.wait(0.3)
+    tween:Cancel()
+    root.CFrame = adjustedCFrame
+    CurrentTween = nil
     return true
 end
 
--- === FUNÇÃO: GET CURRENT QUEST (APENAS SEA 1) ===
+-- === FUNÇÃO: GET CURRENT QUEST ===
 local function GetCurrentQuest()
     local myLevel = Player.Data.Level.Value
-    local selectedQuest = QuestData["Sea 1"][1] -- Default primeira quest
+    local selectedQuest = QuestData["Sea 1"][1]
     
     for _, quest in ipairs(QuestData["Sea 1"]) do
         if myLevel >= quest.Level then
             selectedQuest = quest
         else
-            break -- Para quando achar uma quest acima do nível
+            break
         end
     end
     
-    -- Se o nível for muito alto (ex: 2800), usa a última quest do Sea 1
+    -- Limite máximo do Sea 1
     if myLevel > 650 then
-        selectedQuest = QuestData["Sea 1"][#QuestData["Sea 1"]] -- Última quest
+        selectedQuest = QuestData["Sea 1"][#QuestData["Sea 1"]]
     end
     
     return selectedQuest
 end
 
--- === FUNÇÃO: CHECK QUEST ===
-local function HasQuest(questName, questId)
+-- === FUNÇÃO: VERIFICA SE TEM QUEST ===
+local function HasQuest()
     local playerGui = Player.PlayerGui
     if not playerGui then return false end
     
@@ -142,9 +152,18 @@ local function HasQuest(questName, questId)
     if not main then return false end
     
     local questFrame = main:FindFirstChild("Quest")
-    if not questFrame or not questFrame.Visible then return false end
+    if not questFrame then return false end
     
+    return questFrame.Visible
+end
+
+-- === FUNÇÃO: VERIFICA SE É A QUEST CERTA ===
+local function IsCorrectQuest(questName)
+    if not HasQuest() then return false end
+    
+    local questFrame = Player.PlayerGui.Main.Quest
     local questTitle = questFrame:FindFirstChild("QuestName")
+    
     if questTitle then
         return string.find(questTitle.Text, questName) ~= nil
     end
@@ -152,25 +171,20 @@ local function HasQuest(questName, questId)
     return false
 end
 
--- === FUNÇÃO: MAGNET SEGURO ===
-local function SafeMagnet(targetMob)
+-- === FUNÇÃO: SIMPLE MAGNET ===
+local function SimpleMagnet(targetMob)
     if not _G.BringMobs or not targetMob then return end
     
     pcall(function()
         local character = Player.Character
-        if not character or not character:FindFirstChild("HumanoidRootPart") then return end
-        
-        local playerPos = character.HumanoidRootPart.Position
+        if not character then return end
         
         for _, mob in pairs(game.Workspace.Enemies:GetChildren()) do
-            if mob.Name == targetMob.Name and mob:FindFirstChild("HumanoidRootPart") and mob.Humanoid.Health > 0 then
-                local mobPos = mob.HumanoidRootPart.Position
-                local distance = (mobPos - playerPos).Magnitude
+            if mob.Name == targetMob.Name and mob:FindFirstChild("HumanoidRootPart") then
+                local distance = (mob.HumanoidRootPart.Position - character.HumanoidRootPart.Position).Magnitude
                 
-                -- Só magnet em distância média
-                if distance > 30 and distance < 150 then
-                    local direction = (playerPos - mobPos).Unit
-                    mob.HumanoidRootPart.CFrame = mob.HumanoidRootPart.CFrame + (direction * 3)
+                if distance < Config.MagnetRadius then
+                    mob.HumanoidRootPart.CFrame = character.HumanoidRootPart.CFrame + Vector3.new(0, 0, -5)
                     mob.HumanoidRootPart.CanCollide = false
                 end
             end
@@ -178,20 +192,11 @@ local function SafeMagnet(targetMob)
     end)
 end
 
--- === FUNÇÃO: EQUIP WEAPON ===
+-- === FUNÇÃO: EQUIP WEAPON SIMPLES ===
 local function EquipWeapon()
     pcall(function()
         local weaponName = _G.SelectWeapon
-        if not weaponName then return end
-        
-        -- Procura na mochila
-        for _, tool in pairs(Player.Backpack:GetChildren()) do
-            if tool.Name == weaponName then
-                Player.Character.Humanoid:EquipTool(tool)
-                task.wait(0.2)
-                return true
-            end
-        end
+        if not weaponName then return false end
         
         -- Verifica se já está equipada
         for _, tool in pairs(Player.Character:GetChildren()) do
@@ -200,11 +205,45 @@ local function EquipWeapon()
             end
         end
         
+        -- Procura na mochila
+        local tool = Player.Backpack:FindFirstChild(weaponName)
+        if tool then
+            Player.Character.Humanoid:EquipTool(tool)
+            task.wait(0.3) -- Delay após equipar
+            return true
+        end
+        
         return false
     end)
 end
 
--- === AUTO CLICK ===
+-- === FUNÇÃO: ATACA O MOB ===
+local function AttackMob(targetMob)
+    if not targetMob or not targetMob:FindFirstChild("HumanoidRootPart") then return false end
+    
+    pcall(function()
+        local character = Player.Character
+        if not character then return false end
+        
+        -- Posiciona perto do mob (mas não em cima)
+        local mobPos = targetMob.HumanoidRootPart.CFrame
+        local attackPos = mobPos * CFrame.new(0, Config.AttackDistance, 0)
+        
+        character.HumanoidRootPart.CFrame = attackPos
+        
+        -- Vira para o mob
+        character.HumanoidRootPart.CFrame = CFrame.new(
+            character.HumanoidRootPart.Position,
+            Vector3.new(mobPos.X, character.HumanoidRootPart.Position.Y, mobPos.Z)
+        )
+        
+        return true
+    end)
+    
+    return false
+end
+
+-- === FUNÇÃO: AUTO CLICK ===
 function FarmModule.StartAutoClick(toggle)
     _G.AutoClick = toggle
     
@@ -216,23 +255,22 @@ function FarmModule.StartAutoClick(toggle)
     if not toggle then return end
     
     ClickThread = task.spawn(function()
-        local virtualUser = game:GetService('VirtualUser')
-        
         while _G.AutoClick do
             pcall(function()
                 if Player.Character and Player.Character:FindFirstChildOfClass("Tool") then
+                    local virtualUser = game:GetService('VirtualUser')
                     virtualUser:CaptureController()
                     virtualUser:Button1Down(Vector2.new(0, 0))
-                    task.wait(0.01)
+                    task.wait(0.05)
                     virtualUser:Button1Up(Vector2.new(0, 0))
                 end
             end)
-            task.wait(_G.FastAttackDelay or 0.1)
+            task.wait(_G.FastAttackDelay or 0.2)
         end
     end)
 end
 
--- === SISTEMA PRINCIPAL DE FARM ===
+-- === SISTEMA PRINCIPAL SIMPLIFICADO ===
 function FarmModule.StartFarm(toggle, mode)
     _G.FarmMode = mode or "Level"
     _G.AutoFarm = toggle
@@ -248,8 +286,10 @@ function FarmModule.StartFarm(toggle, mode)
     end
     
     MainFarmThread = task.spawn(function()
+        local state = "GET_QUEST" -- Estados: GET_QUEST, FIND_MOB, ATTACK
+        
         while _G.AutoFarm do
-            task.wait(0.5)
+            task.wait(0.5) -- Loop mais lento
             
             pcall(function()
                 local character = Player.Character
@@ -258,70 +298,80 @@ function FarmModule.StartFarm(toggle, mode)
                     return
                 end
                 
-                -- MODO LEVEL
                 local currentQuest = GetCurrentQuest()
                 if not currentQuest then return end
                 
-                local hasQuest = HasQuest(currentQuest.QuestName, currentQuest.QuestID)
+                -- VERIFICA SE TEM QUEST
+                local hasQuest = HasQuest()
+                local correctQuest = IsCorrectQuest(currentQuest.QuestName)
                 
-                if not hasQuest then
-                    -- PEGAR QUEST
+                if not hasQuest or not correctQuest then
+                    state = "GET_QUEST"
+                else
+                    state = "FIND_MOB"
+                end
+                
+                -- MÁQUINA DE ESTADOS
+                if state == "GET_QUEST" then
+                    -- PARA DE ATACAR
                     FarmModule.StartAutoClick(false)
-                    SmoothTween(currentQuest.NPC_Pos)
                     
+                    -- VAI ATÉ O NPC
+                    print("[FARM] Indo pegar quest:", currentQuest.QuestName)
+                    StableTween(currentQuest.NPC_Pos)
+                    task.wait(1) -- Espera chegar
+                    
+                    -- TENTA PEGAR A QUEST
                     local args = {"StartQuest", currentQuest.QuestName, currentQuest.QuestID}
                     game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args))
                     
-                    -- Espera quest aparecer
-                    for i = 1, 20 do
-                        if HasQuest(currentQuest.QuestName, currentQuest.QuestID) then
+                    -- ESPERA A QUEST APARECER
+                    for i = 1, 10 do
+                        if IsCorrectQuest(currentQuest.QuestName) then
+                            print("[FARM] Quest aceita!")
+                            state = "FIND_MOB"
                             break
                         end
                         task.wait(0.5)
                     end
                     
-                else
-                    -- PROCURA MOB
+                elseif state == "FIND_MOB" then
+                    -- PROCURA O MOB
                     local targetMob = game.Workspace.Enemies:FindFirstChild(currentQuest.Name)
                     
                     if targetMob and targetMob:FindFirstChild("HumanoidRootPart") and targetMob.Humanoid.Health > 0 then
-                        -- ATACA
+                        state = "ATTACK"
+                    else
+                        -- NÃO ACHOU MOB, VAI PARA SPAWN
+                        print("[FARM] Mob não encontrado, indo para spawn")
+                        FarmModule.StartAutoClick(false)
+                        StableTween(currentQuest.Mob_Pos)
+                        task.wait(2)
+                    end
+                    
+                elseif state == "ATTACK" then
+                    local targetMob = game.Workspace.Enemies:FindFirstChild(currentQuest.Name)
+                    
+                    if targetMob and targetMob.Humanoid.Health > 0 then
+                        -- EQUIPA ARMA
                         EquipWeapon()
+                        
+                        -- ATIVA AUTO CLICK
                         FarmModule.StartAutoClick(true)
                         
+                        -- MAGNET (SE LIGADO)
                         if _G.BringMobs then
-                            SafeMagnet(targetMob)
+                            SimpleMagnet(targetMob)
                         end
                         
-                        -- **POSICIONAMENTO SUAVE SEM TELEPORTE BRUSCO**
-                        local mobPos = targetMob.HumanoidRootPart.CFrame
-                        local attackDistance = 15
+                        -- POSICIONA PARA ATACAR
+                        AttackMob(targetMob)
                         
-                        -- Calcula posição ao redor do mob
-                        local attackPos = mobPos * CFrame.new(0, attackDistance, 0)
-                        
-                        -- Usa tween mesmo para pequenos ajustes
-                        local currentPos = character.HumanoidRootPart.CFrame
-                        local distanceToMob = (currentPos.Position - mobPos.Position).Magnitude
-                        
-                        if distanceToMob > attackDistance + 5 then
-                            -- Se está longe, usa tween
-                            local tweenPos = CFrame.new(
-                                mobPos.X, 
-                                mobPos.Y + attackDistance, 
-                                mobPos.Z
-                            )
-                            SmoothTween(tweenPos)
-                        else
-                            -- Se já está perto, pequeno ajuste
-                            character.HumanoidRootPart.CFrame = attackPos
-                        end
-                        
+                        print("[FARM] Atacando:", currentQuest.Name)
                     else
-                        -- MOB NÃO ENCONTRADO
+                        -- MOB MORREU
+                        state = "FIND_MOB"
                         FarmModule.StartAutoClick(false)
-                        SmoothTween(currentQuest.Mob_Pos)
-                        task.wait(2)
                     end
                 end
             end)
@@ -329,6 +379,10 @@ function FarmModule.StartFarm(toggle, mode)
         
         -- LIMPEZA
         FarmModule.StartAutoClick(false)
+        if CurrentTween then
+            CurrentTween:Cancel()
+            CurrentTween = nil
+        end
     end)
 end
 
@@ -344,8 +398,15 @@ function FarmModule.StopAll()
         ClickThread = nil
     end
     
+    if CurrentTween then
+        CurrentTween:Cancel()
+        CurrentTween = nil
+    end
+    
     _G.AutoFarm = false
     _G.AutoClick = false
+    
+    print("[FARM] Parado completamente")
     return true
 end
 
