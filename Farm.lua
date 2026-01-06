@@ -1,7 +1,8 @@
--- [[ FARM.LUA - COM SISTEMA DE QUEST DO SEU ANTIGO SCRIPT ]]
+-- [[ FARM.LUA - COM AUTO CLICK FUNCIONAL ]]
 local FarmModule = {}
 local Player = game.Players.LocalPlayer
 local TweenService = game:GetService("TweenService")
+local VirtualUser = game:GetService("VirtualUser")
 
 -- === CONFIGURAÇÕES ===
 local Config = {
@@ -15,11 +16,12 @@ local Config = {
 _G.BringMobs = _G.BringMobs or false
 _G.FastAttackDelay = _G.FastAttackDelay or 0.15
 _G.SelectWeapon = _G.SelectWeapon or ""
+_G.Select_Weapon_Check = _G.Select_Weapon_Check or "Melee"
 _G.FarmMode = _G.FarmMode or "Level"
 _G.AutoFarm = _G.AutoFarm or false
 _G.AutoClick = _G.AutoClick or false
 
--- === TABELA DE QUESTS (MESMA DO SEU ANTIGO) ===
+-- === TABELA DE QUESTS ===
 local QuestData = {
     ["Sea 1"] = {
         {Level = 0, Name = "Bandit", QuestName = "BanditQuest1", QuestID = 1, NPC_Pos = CFrame.new(1060, 16, 1547), Mob_Pos = CFrame.new(1145, 17, 1634)},
@@ -51,11 +53,87 @@ local QuestData = {
 
 -- === THREADS ===
 local MainFarmThread = nil
-local CombatThread = nil
+local AutoClickThread = nil
 
--- === FUNÇÕES DO SEU SCRIPT ANTIGO ===
+-- === FUNÇÃO EQUIP WEAPON (DO SEU CÓDIGO) ===
+local function EquipWeapon()
+    local char = Player.Character
+    if not char then return false end
 
--- TELEPORTE SUAVE (DO SEU ANTIGO)
+    -- Se já tem arma equipada, não faz nada
+    if char:FindFirstChildOfClass("Tool") then
+        return true
+    end
+
+    -- Procura arma na mochila baseada no tipo selecionado
+    local weaponType = _G.Select_Weapon_Check or "Melee"
+    local checkType = weaponType == "Fruit" and "Blox Fruit" or weaponType
+    
+    for _, tool in pairs(Player.Backpack:GetChildren()) do
+        if tool:IsA("Tool") and tool.ToolTip == checkType then
+            _G.SelectWeapon = tool.Name
+            char.Humanoid:EquipTool(tool)
+            task.wait(0.2) -- Pequeno delay após equipar
+            return true
+        end
+    end
+
+    return false
+end
+
+-- === AUTO CLICK FUNCIONAL (SEU CÓDIGO) ===
+function FarmModule.StartAutoClick(Toggle)
+    _G.AutoClick = Toggle
+
+    if AutoClickThread then
+        task.cancel(AutoClickThread)
+        AutoClickThread = nil
+    end
+
+    if not Toggle then 
+        print("[AUTO CLICK] Desativado")
+        return 
+    end
+
+    AutoClickThread = task.spawn(function()
+        print("[AUTO CLICK] Iniciado")
+        
+        while _G.AutoClick do
+            task.wait(_G.FastAttackDelay or 0.15)
+
+            pcall(function()
+                local char = Player.Character
+                if not char then return end
+
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                local tool = char:FindFirstChildOfClass("Tool")
+
+                if not hrp then return end
+
+                -- Se não tem arma, tenta equipar
+                if not tool then
+                    EquipWeapon()
+                    return
+                end
+
+                -- Ataca
+                VirtualUser:CaptureController()
+                VirtualUser:Button1Down(Vector2.new(500, 500))
+                task.wait(0.01) -- Pequeno delay entre down e up
+                VirtualUser:Button1Up(Vector2.new(500, 500))
+                
+                print("[AUTO CLICK] Ataque realizado")
+            end)
+        end
+        
+        print("[AUTO CLICK] Finalizado")
+    end)
+end
+
+-- Para compatibilidade com sua GUI (StartCombat também funciona)
+FarmModule.StartCombat = FarmModule.StartAutoClick
+
+-- === SISTEMA DE TELEPORTE ===
 local function SmoothTween(TargetCFrame)
     local Character = Player.Character
     if not Character or not Character:FindFirstChild("HumanoidRootPart") then return false end
@@ -63,18 +141,15 @@ local function SmoothTween(TargetCFrame)
     local Root = Character.HumanoidRootPart
     local Distance = (Root.Position - TargetCFrame.p).Magnitude
     
-    -- Se já está perto, vai direto
     if Distance < 15 then 
         Root.CFrame = TargetCFrame 
         return true
     end
     
-    -- Tween igual ao seu antigo
     local info = TweenInfo.new(Distance / 250, Enum.EasingStyle.Linear)
     local tween = TweenService:Create(Root, info, {CFrame = TargetCFrame})
     tween:Play()
     
-    -- Espera o tween completar
     local completed = false
     tween.Completed:Connect(function()
         completed = true
@@ -92,7 +167,7 @@ local function SmoothTween(TargetCFrame)
     return true
 end
 
--- VERIFICA SE TEM QUEST (DO SEU ANTIGO)
+-- === VERIFICA QUEST ===
 local function HasQuest(QuestName, QuestID)
     local PlayerGui = Player.PlayerGui
     if not PlayerGui then return false end
@@ -113,34 +188,7 @@ local function HasQuest(QuestName, QuestID)
     return false
 end
 
--- PEGA QUEST PARA O LEVEL (DO SEU ANTIGO)
-local function GetCurrentQuest()
-    local myLevel = Player.Data.Level.Value
-    local data = nil
-    
-    for _, q in ipairs(QuestData["Sea 1"]) do
-        if myLevel >= q.Level then 
-            data = q 
-        end
-    end
-    
-    return data
-end
-
--- EQUIPA ARMA (DO SEU ANTIGO)
-local function EquipWeapon()
-    pcall(function()
-        local weapon = _G.SelectWeapon 
-        if weapon then
-            local tool = Player.Backpack:FindFirstChild(weapon)
-            if tool then
-                Player.Character.Humanoid:EquipTool(tool)
-            end
-        end
-    end)
-end
-
--- MAGNET (DO SEU ANTIGO)
+-- === MAGNET ===
 local function Magnet(TargetMob)
     if not _G.BringMobs or not TargetMob or not TargetMob:FindFirstChild("HumanoidRootPart") then return end
     
@@ -159,41 +207,30 @@ local function Magnet(TargetMob)
     end)
 end
 
--- === AUTO CLICK (DO SEU ANTIGO) ===
-function FarmModule.StartAutoClick(Toggle)
-    _G.AutoClick = Toggle
+-- === SISTEMA PRINCIPAL DE FARM ===
+function FarmModule.StartFarm(Toggle, Mode)
+    _G.FarmMode = Mode or "Level"
+    _G.AutoFarm = Toggle
     
-    task.spawn(function()
-        while true do
-            task.wait(_G.FastAttackDelay or 0.1) 
-            
-            if _G.AutoClick then
-                pcall(function()
-                    if Player.Character:FindFirstChildOfClass("Tool") then
-                        local vUser = game:GetService('VirtualUser')
-                        vUser:CaptureController()
-                        vUser:Button1Down(Vector2.new(1e4, 1e4))
-                        vUser:Button1Up(Vector2.new(1e4, 1e4))
-                    end
-                end)
-            end
-        end
-    end)
-end
-
--- === SISTEMA PRINCIPAL DE FARM (DO SEU ANTIGO, COM MELHORIAS) ===
-function FarmModule.StartLevelFarm(Toggle)
-    _G.AutoFarmLevel = Toggle
+    if MainFarmThread then
+        task.cancel(MainFarmThread)
+        MainFarmThread = nil
+    end
     
-    task.spawn(function()
-        while _G.AutoFarmLevel do
+    if not Toggle then 
+        FarmModule.StartAutoClick(false)
+        return 
+    end
+    
+    MainFarmThread = task.spawn(function()
+        while _G.AutoFarm do
             task.wait(0.1)
             
             pcall(function()
                 local myLevel = Player.Data.Level.Value
                 local data = nil
                 
-                -- Busca a Quest ideal para o seu nível (igual ao antigo)
+                -- Busca a Quest ideal para o seu nível
                 for _, q in ipairs(QuestData["Sea 1"]) do
                     if myLevel >= q.Level then 
                         data = q 
@@ -201,13 +238,14 @@ function FarmModule.StartLevelFarm(Toggle)
                 end
 
                 if data then
-                    -- Verifica se já está com a missão na tela (igual ao antigo)
-                    local hasQuest = Player.PlayerGui.Main:FindFirstChild("Quest") and Player.PlayerGui.Main.Quest.Visible
+                    -- Verifica se já está com a missão na tela
+                    local hasQuest = HasQuest(data.QuestName, data.QuestID)
                     
                     if not hasQuest then
-                        _G.AutoClick = false -- Para de bater para pegar a quest
+                        -- Para de atacar para pegar a quest
+                        FarmModule.StartAutoClick(false)
                         
-                        -- Teleporta até o NPC
+                        -- Vai até o NPC
                         SmoothTween(data.NPC_Pos)
                         
                         -- Aceita a quest
@@ -224,7 +262,7 @@ function FarmModule.StartLevelFarm(Toggle)
                             EquipWeapon()
                             
                             -- Ativa auto click
-                            _G.AutoClick = true
+                            FarmModule.StartAutoClick(true)
                             
                             -- Magnet
                             Magnet(Enemy)
@@ -234,52 +272,36 @@ function FarmModule.StartLevelFarm(Toggle)
                             
                         else
                             -- Se o mob morreu, vai para o spawn point
-                            _G.AutoClick = false
+                            FarmModule.StartAutoClick(false)
                             SmoothTween(data.Mob_Pos)
                         end
                     end
                 end
             end)
         end
-    end)
-end
-
--- === SISTEMA UNIFICADO PARA A NOVA GUI ===
-function FarmModule.StartFarm(Toggle, Mode)
-    _G.FarmMode = Mode or "Level"
-    _G.AutoFarm = Toggle
-    
-    if MainFarmThread then
-        task.cancel(MainFarmThread)
-        MainFarmThread = nil
-    end
-    
-    if not Toggle then 
+        
+        -- Limpeza
         FarmModule.StartAutoClick(false)
-        return 
-    end
-    
-    MainFarmThread = task.spawn(function()
-        -- Usa o sistema antigo de farm
-        FarmModule.StartLevelFarm(true)
     end)
 end
 
 -- === STOP ALL ===
 function FarmModule.StopAll()
-    _G.AutoFarm = false
-    _G.AutoFarmLevel = false
-    _G.AutoClick = false
-    
     if MainFarmThread then
         task.cancel(MainFarmThread)
         MainFarmThread = nil
     end
     
+    if AutoClickThread then
+        task.cancel(AutoClickThread)
+        AutoClickThread = nil
+    end
+    
+    _G.AutoFarm = false
+    _G.AutoClick = false
+    
+    print("[FARM] Parado completamente")
     return true
 end
-
--- Para compatibilidade com a nova GUI
-FarmModule.StartCombat = FarmModule.StartAutoClick
 
 return FarmModule
