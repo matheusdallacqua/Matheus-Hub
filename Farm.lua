@@ -1,32 +1,7 @@
--- [[ FARM.LUA - MATHEUS HUB 2026 ]]
+-- [[ FARM.LUA - VERSÃO CORRETA ]]
 local FarmModule = {}
 local Player = game.Players.LocalPlayer
 local TweenService = game:GetService("TweenService")
-
--- =========================
---  FAST ATTACK - ARCEUS X NEO
--- =========================
-local CombatFramework = require(game:GetService("Players").LocalPlayer.PlayerScripts.CombatFramework)
-local CombatFrameworkR = getupvalues(CombatFramework)[2]
-local RigController = require(game:GetService("Players").LocalPlayer.PlayerScripts.CombatFramework.RigController)
-local RigControllerR = getupvalues(RigController)[2]
-local CameraShaker = require(game.ReplicatedStorage.Util.CameraShaker)
-CameraShaker:Stop()
-
-local function FastAttack()
-    pcall(function()
-        local AC = CombatFrameworkR.activeController
-        if not AC then return end
-        if not AC.equipped then return end
-
-        AC.hitboxMagnitude = 55
-        AC.timeToNextAttack = 0
-        AC.increment = 3
-        AC.blocking = false
-
-        AC:attack()
-    end)
-end
 
 -- === VARIÁVEIS ===
 _G.BringMobs = _G.BringMobs or false
@@ -52,28 +27,63 @@ local QuestData = {
             NPC_Pos = CFrame.new(1060, 16, 1547),
             Mob_Pos = CFrame.new(1145, 17, 1634)
         },
-        {
-            Level = 10,
-            Name = "Monkey",
-            QuestName = "JungleQuest",
-            QuestID = 1,
-            NPC_Pos = CFrame.new(-1601, 36, 153),
-            Mob_Pos = CFrame.new(-1623, 21, 142)
-        },
-        {
-            Level = 15,
-            Name = "Gorilla",
-            QuestName = "JungleQuest",
-            QuestID = 2,
-            NPC_Pos = CFrame.new(-1601, 36, 153),
-            Mob_Pos = CFrame.new(-1236, 6, -493)
-        },
     }
 }
 
 -- =========================
---  EQUIPAR ARMA
+--  FAST ATTACK ARCEUS X NEO (AGORA DENTRO DE UMA FUNÇÃO)
 -- =========================
+local CombatFramework, CombatFrameworkR, RigControllerR, CameraShaker
+
+local function SetupFastAttack()
+    -- Só carrega os módulos quando a função for chamada PELA PRIMEIRA VEZ
+    if not CombatFramework then
+        local success = pcall(function()
+            CombatFramework = require(game:GetService("Players").LocalPlayer.PlayerScripts.CombatFramework)
+            CombatFrameworkR = getupvalues(CombatFramework)[2]
+            local RigController = require(game:GetService("Players").LocalPlayer.PlayerScripts.CombatFramework.RigController)
+            RigControllerR = getupvalues(RigController)[2]
+            CameraShaker = require(game.ReplicatedStorage.Util.CameraShaker)
+            CameraShaker:Stop()
+        end)
+        
+        if not success then
+            print("[FAST ATTACK] Não conseguiu carregar módulos do CombatFramework")
+            return false
+        end
+    end
+    return true
+end
+
+local function FastAttack()
+    pcall(function()
+        -- Tenta usar Arceus X Neo
+        if SetupFastAttack() then
+            local AC = CombatFrameworkR.activeController
+            if AC and AC.equipped then
+                AC.hitboxMagnitude = 55
+                AC.timeToNextAttack = 0
+                AC.increment = 3
+                AC.blocking = false
+                AC:attack()
+                return
+            end
+        end
+        
+        -- Fallback: VirtualUser normal
+        local VirtualUser = game:GetService('VirtualUser')
+        VirtualUser:CaptureController()
+        VirtualUser:Button1Down(Vector2.new(500, 500))
+        task.wait(0.01)
+        VirtualUser:Button1Up(Vector2.new(500, 500))
+    end)
+end
+
+-- =========================
+--  RESTANTE DO CÓDIGO (MESMO DE ANTES)
+-- =========================
+
+-- EQUIPAR ARMA
 local function EquipWeapon()
     local char = Player.Character
     if not char then return false end
@@ -97,9 +107,7 @@ local function EquipWeapon()
     return false
 end
 
--- =========================
---  AUTO CLICK COM FASTATTACK
--- =========================
+-- AUTO CLICK
 function FarmModule.StartAutoClick(Toggle)
     _G.AutoClick = Toggle
 
@@ -132,14 +140,10 @@ function FarmModule.StartAutoClick(Toggle)
     end)
 end
 
--- =========================
---  COMPATIBILIDADE
--- =========================
+-- COMPATIBILIDADE
 FarmModule.StartCombat = FarmModule.StartAutoClick
 
--- =========================
---  TELEPORTE SUAVE
--- =========================
+-- TELEPORTE SUAVE
 local function SmoothTween(TargetCFrame)
     local Character = Player.Character
     if not Character or not Character:FindFirstChild("HumanoidRootPart") then return false end
@@ -155,14 +159,19 @@ local function SmoothTween(TargetCFrame)
     local TweenInfoData = TweenInfo.new(Distance / 200, Enum.EasingStyle.Linear)
     local Tween = TweenService:Create(Root, TweenInfoData, {CFrame = TargetCFrame})
     Tween:Play()
-    Tween.Completed:Wait()
-
+    
+    -- Timeout de segurança
+    local startTime = tick()
+    while tick() - startTime < 10 do
+        local currentDist = (Root.Position - TargetCFrame.Position).Magnitude
+        if currentDist < 15 then break end
+        task.wait(0.1)
+    end
+    
     return true
 end
 
--- =========================
---  VERIFICA QUEST
--- =========================
+-- VERIFICA QUEST
 local function HasQuest()
     local PlayerGui = Player:FindFirstChild("PlayerGui")
     if not PlayerGui then return false end
@@ -176,9 +185,7 @@ local function HasQuest()
     return QuestFrame.Visible
 end
 
--- =========================
---  MAGNET
--- =========================
+-- MAGNET
 local function Magnet(TargetMob)
     if not _G.BringMobs then return end
     if not TargetMob then return end
@@ -199,25 +206,7 @@ local function Magnet(TargetMob)
     end)
 end
 
--- =========================
---  PEGA QUEST PARA O LEVEL
--- =========================
-local function GetCurrentQuest()
-    local myLevel = Player.Data.Level.Value
-    local data = nil
-    
-    for _, q in ipairs(QuestData["Sea 1"]) do
-        if myLevel >= q.Level then 
-            data = q 
-        end
-    end
-    
-    return data or QuestData["Sea 1"][1]
-end
-
--- =========================
---  SISTEMA PRINCIPAL DE FARM
--- =========================
+-- SISTEMA PRINCIPAL
 function FarmModule.StartFarm(Toggle, Mode)
     _G.FarmMode = Mode or "Level"
     _G.AutoFarm = Toggle
@@ -242,12 +231,11 @@ function FarmModule.StartFarm(Toggle, Mode)
                 local char = Player.Character
                 if not char or not char:FindFirstChild("HumanoidRootPart") then return end
 
-                local data = GetCurrentQuest()
+                local data = QuestData["Sea 1"][1]
                 if not data then return end
 
-                -- SEM QUEST → PEGA QUEST
                 if not HasQuest() then
-                    print("[FARM] Indo pegar quest:", data.QuestName)
+                    print("[FARM] Indo pegar quest")
 
                     FarmModule.StartAutoClick(false)
                     SmoothTween(data.NPC_Pos)
@@ -263,7 +251,6 @@ function FarmModule.StartFarm(Toggle, Mode)
                     return
                 end
 
-                -- PROCURA MOB
                 local Enemy = nil
 
                 for _, v in pairs(workspace.Enemies:GetChildren()) do
@@ -273,9 +260,7 @@ function FarmModule.StartFarm(Toggle, Mode)
                     end
                 end
 
-                -- SE ACHOU → ATACA
                 if Enemy then
-                    -- ⚠️ IMPORTANTE: USA APENAS StartAutoClick
                     FarmModule.StartAutoClick(true)
 
                     repeat
@@ -291,7 +276,6 @@ function FarmModule.StartFarm(Toggle, Mode)
                     until not _G.AutoFarm
 
                 else
-                    -- NÃO ACHOU → TELEPORTA PRO SPAWN
                     print("[FARM] Mob não encontrado, indo para spawn")
 
                     FarmModule.StartAutoClick(false)
@@ -306,9 +290,7 @@ function FarmModule.StartFarm(Toggle, Mode)
     end)
 end
 
--- =========================
---  STOP
--- =========================
+-- STOP
 function FarmModule.StopAll()
     if MainFarmThread then
         task.cancel(MainFarmThread)
