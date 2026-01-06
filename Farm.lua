@@ -1,7 +1,9 @@
--- [[ FARM.LUA - VERSÃO CORRETA ]]
+-- [[ FARM.LUA - VERSÃO CORRETA COM AUTO-CLICK DE MOUSE INTEGRADO ]]
 local FarmModule = {}
 local Player = game.Players.LocalPlayer
 local TweenService = game:GetService("TweenService")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
 -- === VARIÁVEIS ===
 _G.BringMobs = _G.BringMobs or false
@@ -12,9 +14,17 @@ _G.FarmMode = _G.FarmMode or "Level"
 _G.AutoFarm = _G.AutoFarm or false
 _G.AutoClick = _G.AutoClick or false
 
+-- === NOVAS VARIÁVEIS PARA O AUTO-CLICK DE MOUSE ===
+_G.AutoClickMouseEnabled = false  -- Ativar/desativar
+_G.ClickCooldown = 0.05           -- 50ms entre cliques (padrão)
+_G.ClickDuration = 0.02           -- 20ms duração do clique
+_G.TargetScreenX = 1720           -- Coordenadas da tela (ajustável)
+_G.TargetScreenY = 934            -- Coordenadas da tela (ajustável)
+
 -- === THREADS ===
 local MainFarmThread = nil
 local AutoClickThread = nil
+local MouseAutoClickThread = nil  -- Nova thread para auto-click de mouse
 
 -- === QUEST DATA ===
 local QuestData = {
@@ -31,12 +41,117 @@ local QuestData = {
 }
 
 -- =========================
---  FAST ATTACK ARCEUS X NEO (AGORA DENTRO DE UMA FUNÇÃO)
+--  SISTEMA DE AUTO-CLICK DE MOUSE (DO SEU CÓDIGO LOGITECH)
+-- =========================
+
+-- Converte coordenadas de tela para o sistema do Roblox (0-65535)
+local function ConvertToRobloxCoordinates(screenX, screenY)
+    local viewport = workspace.CurrentCamera.ViewportSize
+    local scaleX = screenX / viewport.X
+    local scaleY = screenY / viewport.Y
+    
+    -- Sistema de 0 a 65535 (igual Logitech G Hub)
+    local robloxX = math.floor(scaleX * 65535)
+    local robloxY = math.floor(scaleY * 65535)
+    
+    return robloxX, robloxY
+end
+
+-- Simula movimento do mouse para coordenadas específicas
+local function MoveMouseToScreen(x, y)
+    local robloxX, robloxY = ConvertToRobloxCoordinates(x, y)
+    
+    -- Usando o mouse virtual do Roblox
+    local VirtualInputManager = game:GetService("VirtualInputManager")
+    
+    -- Move o cursor
+    VirtualInputManager:SendMouseMoveEvent(robloxX, robloxY, workspace)
+    
+    -- Também move o Mouse real se possível
+    pcall(function()
+        local Mouse = Player:GetMouse()
+        -- Nota: Não podemos mover o cursor REAL do jogador no Roblox,
+        -- mas podemos simular o movimento para alguns scripts
+    end)
+end
+
+-- Sistema de auto-click mantendo pressionado G4 (Botão 4 do mouse)
+function FarmModule.StartMouseAutoClick(Toggle)
+    _G.AutoClickMouseEnabled = Toggle
+    
+    if MouseAutoClickThread then
+        task.cancel(MouseAutoClickThread)
+        MouseAutoClickThread = nil
+    end
+    
+    if not Toggle then
+        print("[MOUSE AUTO-CLICK] Desativado")
+        return
+    end
+    
+    MouseAutoClickThread = task.spawn(function()
+        print(string.format("[MOUSE AUTO-CLICK] Iniciado | Coord: X=%d Y=%d | Delay: %dms", 
+            _G.TargetScreenX, _G.TargetScreenY, _G.ClickCooldown * 1000))
+        
+        -- Configura o mouse para clicar automaticamente
+        local VirtualInputManager = game:GetService("VirtualInputManager")
+        local startTime = tick()
+        local clickCount = 0
+        
+        while _G.AutoClickMouseEnabled do
+            local currentTime = tick()
+            
+            -- Só funciona se o jogo estiver em foco
+            if game:GetService("UserInputService").WindowFocused then
+                
+                -- 1. Move o mouse para a posição alvo
+                MoveMouseToScreen(_G.TargetScreenX, _G.TargetScreenY)
+                task.wait(0.01)
+                
+                -- 2. Pressiona botão esquerdo (20ms)
+                VirtualInputManager:SendMouseButtonEvent(
+                    _G.TargetScreenX, 
+                    _G.TargetScreenY, 
+                    0,  -- Botão esquerdo
+                    true,  -- Pressionar
+                    workspace, 
+                    1
+                )
+                task.wait(_G.ClickDuration)
+                
+                -- 3. Solta botão esquerdo
+                VirtualInputManager:SendMouseButtonEvent(
+                    _G.TargetScreenX, 
+                    _G.TargetScreenY, 
+                    0,  -- Botão esquerdo
+                    false,  -- Soltar
+                    workspace, 
+                    1
+                )
+                
+                clickCount = clickCount + 1
+                
+                -- Log a cada 100 cliques
+                if clickCount % 100 == 0 then
+                    print(string.format("[MOUSE AUTO-CLICK] %d cliques realizados", clickCount))
+                end
+            end
+            
+            -- Espera o intervalo entre cliques (50ms padrão)
+            task.wait(_G.ClickCooldown)
+        end
+        
+        print(string.format("[MOUSE AUTO-CLICK] Finalizado | Total cliques: %d | Tempo: %.1fs", 
+            clickCount, tick() - startTime))
+    end)
+end
+
+-- =========================
+--  FAST ATTACK ARCEUS X NEO (SEU CÓDIGO ORIGINAL)
 -- =========================
 local CombatFramework, CombatFrameworkR, RigControllerR, CameraShaker
 
 local function SetupFastAttack()
-    -- Só carrega os módulos quando a função for chamada PELA PRIMEIRA VEZ
     if not CombatFramework then
         local success = pcall(function()
             CombatFramework = require(game:GetService("Players").LocalPlayer.PlayerScripts.CombatFramework)
@@ -57,7 +172,6 @@ end
 
 local function FastAttack()
     pcall(function()
-        -- Tenta usar Arceus X Neo
         if SetupFastAttack() then
             local AC = CombatFrameworkR.activeController
             if AC and AC.equipped then
@@ -70,7 +184,6 @@ local function FastAttack()
             end
         end
         
-        -- Fallback: VirtualUser normal
         local VirtualUser = game:GetService('VirtualUser')
         VirtualUser:CaptureController()
         VirtualUser:Button1Down(Vector2.new(500, 500))
@@ -80,7 +193,7 @@ local function FastAttack()
 end
 
 -- =========================
---  RESTANTE DO CÓDIGO (MESMO DE ANTES)
+--  RESTANTE DO CÓDIGO (MODIFICADO PARA USAR AMBOS SISTEMAS)
 -- =========================
 
 -- EQUIPAR ARMA
@@ -107,7 +220,7 @@ local function EquipWeapon()
     return false
 end
 
--- AUTO CLICK
+-- AUTO CLICK ORIGINAL (Fast Attack)
 function FarmModule.StartAutoClick(Toggle)
     _G.AutoClick = Toggle
 
@@ -140,6 +253,19 @@ function FarmModule.StartAutoClick(Toggle)
     end)
 end
 
+-- FUNÇÃO UNIFICADA PARA AMBOS OS SISTEMAS
+function FarmModule.StartAllAutoClick(Toggle)
+    if Toggle then
+        print("[SISTEMA DUPLO] Ativando ambos os auto-clicks")
+        FarmModule.StartAutoClick(true)
+        FarmModule.StartMouseAutoClick(true)
+    else
+        print("[SISTEMA DUPLO] Desativando todos os auto-clicks")
+        FarmModule.StartAutoClick(false)
+        FarmModule.StartMouseAutoClick(false)
+    end
+end
+
 -- COMPATIBILIDADE
 FarmModule.StartCombat = FarmModule.StartAutoClick
 
@@ -160,7 +286,6 @@ local function SmoothTween(TargetCFrame)
     local Tween = TweenService:Create(Root, TweenInfoData, {CFrame = TargetCFrame})
     Tween:Play()
     
-    -- Timeout de segurança
     local startTime = tick()
     while tick() - startTime < 10 do
         local currentDist = (Root.Position - TargetCFrame.Position).Magnitude
@@ -217,7 +342,7 @@ function FarmModule.StartFarm(Toggle, Mode)
     end
 
     if not Toggle then
-        FarmModule.StartAutoClick(false)
+        FarmModule.StartAllAutoClick(false)
         return
     end
 
@@ -237,7 +362,7 @@ function FarmModule.StartFarm(Toggle, Mode)
                 if not HasQuest() then
                     print("[FARM] Indo pegar quest")
 
-                    FarmModule.StartAutoClick(false)
+                    FarmModule.StartAllAutoClick(false)
                     SmoothTween(data.NPC_Pos)
                     task.wait(0.3)
 
@@ -261,7 +386,7 @@ function FarmModule.StartFarm(Toggle, Mode)
                 end
 
                 if Enemy then
-                    FarmModule.StartAutoClick(true)
+                    FarmModule.StartAllAutoClick(true)
 
                     repeat
                         if not Enemy or not Enemy:FindFirstChild("HumanoidRootPart") then break end
@@ -278,14 +403,14 @@ function FarmModule.StartFarm(Toggle, Mode)
                 else
                     print("[FARM] Mob não encontrado, indo para spawn")
 
-                    FarmModule.StartAutoClick(false)
+                    FarmModule.StartAllAutoClick(false)
                     SmoothTween(data.Mob_Pos)
                     task.wait(1)
                 end
             end)
         end
 
-        FarmModule.StartAutoClick(false)
+        FarmModule.StartAllAutoClick(false)
         print("[FARM] Sistema finalizado")
     end)
 end
@@ -302,10 +427,41 @@ function FarmModule.StopAll()
         AutoClickThread = nil
     end
 
+    if MouseAutoClickThread then
+        task.cancel(MouseAutoClickThread)
+        MouseAutoClickThread = nil
+    end
+
     _G.AutoFarm = false
     _G.AutoClick = false
+    _G.AutoClickMouseEnabled = false
 
-    print("[FARM] Tudo parado")
+    print("[FARM] Todos os sistemas parados")
 end
+
+-- FUNÇÕES DE CONFIGURAÇÃO
+function FarmModule.SetMouseTarget(x, y)
+    _G.TargetScreenX = x
+    _G.TargetScreenY = y
+    print(string.format("[CONFIG] Posição do mouse definida: X=%d, Y=%d", x, y))
+end
+
+function FarmModule.SetClickTiming(cooldown, duration)
+    _G.ClickCooldown = cooldown
+    _G.ClickDuration = duration
+    print(string.format("[CONFIG] Timing ajustado: Cooldown=%.3fs, Duration=%.3fs", cooldown, duration))
+end
+
+-- MENU INTERATIVO
+print("==============================================")
+print("FARM.LUA CARREGADO COM AUTO-CLICK DE MOUSE")
+print("==============================================")
+print("Funções disponíveis:")
+print("  FarmModule.StartFarm(true) - Iniciar farm")
+print("  FarmModule.StartMouseAutoClick(true) - Apenas auto-click de mouse")
+print("  FarmModule.StartAllAutoClick(true) - Ambos sistemas")
+print("  FarmModule.SetMouseTarget(1720, 934) - Definir posição")
+print("  FarmModule.StopAll() - Parar tudo")
+print("==============================================")
 
 return FarmModule
