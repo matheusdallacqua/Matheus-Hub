@@ -1,16 +1,8 @@
--- [[ FARM.LUA - COM AUTO CLICK FUNCIONAL ]]
+-- [[ FARM.LUA - COM SEU CÓDIGO DE ATAQUE ]]
 local FarmModule = {}
 local Player = game.Players.LocalPlayer
 local TweenService = game:GetService("TweenService")
 local VirtualUser = game:GetService("VirtualUser")
-
--- === CONFIGURAÇÕES ===
-local Config = {
-    TweenSpeed = 100,
-    AttackDistance = 8,
-    MobSearchRadius = 100,
-    QuestCheckDelay = 1,
-}
 
 -- === VARIÁVEIS ===
 _G.BringMobs = _G.BringMobs or false
@@ -21,33 +13,12 @@ _G.FarmMode = _G.FarmMode or "Level"
 _G.AutoFarm = _G.AutoFarm or false
 _G.AutoClick = _G.AutoClick or false
 
--- === TABELA DE QUESTS ===
+-- === TABELA DE QUESTS (APENAS BANDIT PARA TESTE) ===
 local QuestData = {
     ["Sea 1"] = {
-        {Level = 0, Name = "Bandit", QuestName = "BanditQuest1", QuestID = 1, NPC_Pos = CFrame.new(1060, 16, 1547), Mob_Pos = CFrame.new(1145, 17, 1634)},
-        {Level = 10, Name = "Monkey", QuestName = "JungleQuest", QuestID = 1, NPC_Pos = CFrame.new(-1601, 36, 153), Mob_Pos = CFrame.new(-1623, 21, 142)},
-        {Level = 15, Name = "Gorilla", QuestName = "JungleQuest", QuestID = 2, NPC_Pos = CFrame.new(-1601, 36, 153), Mob_Pos = CFrame.new(-1236, 6, -493)},
-        {Level = 30, Name = "Pirate", QuestName = "PiratQuest1", QuestID = 1, NPC_Pos = CFrame.new(-1141, 4, 3827), Mob_Pos = CFrame.new(-1218, 4, 3911)},
-        {Level = 40, Name = "Brute", QuestName = "PiratQuest1", QuestID = 2, NPC_Pos = CFrame.new(-1141, 4, 3827), Mob_Pos = CFrame.new(-1363, 15, 4172)},
-        {Level = 60, Name = "Desert Bandit", QuestName = "DesertQuest", QuestID = 1, NPC_Pos = CFrame.new(895, 6, 4390), Mob_Pos = CFrame.new(1013, 6, 4381)},
-        {Level = 75, Name = "Desert Officer", QuestName = "DesertQuest", QuestID = 2, NPC_Pos = CFrame.new(895, 6, 4390), Mob_Pos = CFrame.new(1542, 14, 4426)},
-        {Level = 90, Name = "Snow Bandit", QuestName = "SnowQuest", QuestID = 1, NPC_Pos = CFrame.new(1387, 15, -1300), Mob_Pos = CFrame.new(1287, 15, -1336)},
-        {Level = 100, Name = "Snowman", QuestName = "SnowQuest", QuestID = 2, NPC_Pos = CFrame.new(1387, 15, -1300), Mob_Pos = CFrame.new(1281, 15, -1071)},
-        {Level = 120, Name = "Chief Petty Officer", QuestName = "MarineQuest1", QuestID = 1, NPC_Pos = CFrame.new(-4855, 23, 4338), Mob_Pos = CFrame.new(-4839, 6, 4367)},
-        {Level = 150, Name = "Sky Bandit", QuestName = "SkyQuest", QuestID = 1, NPC_Pos = CFrame.new(-1240, 358, -5913), Mob_Pos = CFrame.new(-1246, 393, -5943)},
-        {Level = 175, Name = "Dark Master", QuestName = "SkyQuest", QuestID = 2, NPC_Pos = CFrame.new(-1240, 358, -5913), Mob_Pos = CFrame.new(-1144, 391, -6161)},
-        {Level = 225, Name = "Toga Warrior", QuestName = "ColosseumQuest", QuestID = 1, NPC_Pos = CFrame.new(-1580, 7, -2982), Mob_Pos = CFrame.new(-1805, 7, -2745)},
-        {Level = 250, Name = "Gladiator", QuestName = "ColosseumQuest", QuestID = 2, NPC_Pos = CFrame.new(-1580, 7, -2982), Mob_Pos = CFrame.new(-1805, 7, -3317)},
-        {Level = 300, Name = "Military Soldier", QuestName = "MagmaQuest", QuestID = 1, NPC_Pos = CFrame.new(-5314, 12, 8516), Mob_Pos = CFrame.new(-5414, 11, 8479)},
-        {Level = 325, Name = "Military Spy", QuestName = "MagmaQuest", QuestID = 2, NPC_Pos = CFrame.new(-5314, 12, 8516), Mob_Pos = CFrame.new(-5816, 73, 8456)},
-        {Level = 375, Name = "Fishman Warrior", QuestName = "FishmanQuest", QuestID = 1, NPC_Pos = CFrame.new(61122, 18, 1569), Mob_Pos = CFrame.new(60907, 18, 1546)},
-        {Level = 400, Name = "Fishman Commando", QuestName = "FishmanQuest", QuestID = 2, NPC_Pos = CFrame.new(61122, 18, 1569), Mob_Pos = CFrame.new(61793, 18, 1450)},
-        {Level = 450, Name = "God's Guard", QuestName = "UpperSkyQuest1", QuestID = 1, NPC_Pos = CFrame.new(-5707, 712, -7677), Mob_Pos = CFrame.new(-5820, 712, -7814)},
-        {Level = 475, Name = "Shanda", QuestName = "UpperSkyQuest1", QuestID = 2, NPC_Pos = CFrame.new(-5707, 712, -7677), Mob_Pos = CFrame.new(-5552, 712, -7782)},
-        {Level = 525, Name = "Royal Squad", QuestName = "UpperSkyQuest2", QuestID = 1, NPC_Pos = CFrame.new(-6006, 1593, -4905), Mob_Pos = CFrame.new(-5890, 1593, -4914)},
-        {Level = 550, Name = "Royal Soldier", QuestName = "UpperSkyQuest2", QuestID = 2, NPC_Pos = CFrame.new(-6006, 1593, -4905), Mob_Pos = CFrame.new(-6194, 1593, -4783)},
-        {Level = 625, Name = "Galley Pirate", QuestName = "FountainQuest", QuestID = 1, NPC_Pos = CFrame.new(5256, 38, 4050), Mob_Pos = CFrame.new(5426, 38, 3968)},
-        {Level = 650, Name = "Galley Captain", QuestName = "FountainQuest", QuestID = 2, NPC_Pos = CFrame.new(5256, 38, 4050), Mob_Pos = CFrame.new(5663, 38, 4479)},
+        {Level = 0, Name = "Bandit", QuestName = "BanditQuest1", QuestID = 1, 
+         NPC_Pos = CFrame.new(1060, 16, 1547), 
+         Mob_Pos = CFrame.new(1145, 17, 1634)},
     }
 }
 
@@ -55,85 +26,9 @@ local QuestData = {
 local MainFarmThread = nil
 local AutoClickThread = nil
 
--- === FUNÇÃO EQUIP WEAPON (DO SEU CÓDIGO) ===
-local function EquipWeapon()
-    local char = Player.Character
-    if not char then return false end
+-- === FUNÇÕES DO SEU CÓDIGO ===
 
-    -- Se já tem arma equipada, não faz nada
-    if char:FindFirstChildOfClass("Tool") then
-        return true
-    end
-
-    -- Procura arma na mochila baseada no tipo selecionado
-    local weaponType = _G.Select_Weapon_Check or "Melee"
-    local checkType = weaponType == "Fruit" and "Blox Fruit" or weaponType
-    
-    for _, tool in pairs(Player.Backpack:GetChildren()) do
-        if tool:IsA("Tool") and tool.ToolTip == checkType then
-            _G.SelectWeapon = tool.Name
-            char.Humanoid:EquipTool(tool)
-            task.wait(0.2) -- Pequeno delay após equipar
-            return true
-        end
-    end
-
-    return false
-end
-
--- === AUTO CLICK FUNCIONAL (SEU CÓDIGO) ===
-function FarmModule.StartAutoClick(Toggle)
-    _G.AutoClick = Toggle
-
-    if AutoClickThread then
-        task.cancel(AutoClickThread)
-        AutoClickThread = nil
-    end
-
-    if not Toggle then 
-        print("[AUTO CLICK] Desativado")
-        return 
-    end
-
-    AutoClickThread = task.spawn(function()
-        print("[AUTO CLICK] Iniciado")
-        
-        while _G.AutoClick do
-            task.wait(_G.FastAttackDelay or 0.15)
-
-            pcall(function()
-                local char = Player.Character
-                if not char then return end
-
-                local hrp = char:FindFirstChild("HumanoidRootPart")
-                local tool = char:FindFirstChildOfClass("Tool")
-
-                if not hrp then return end
-
-                -- Se não tem arma, tenta equipar
-                if not tool then
-                    EquipWeapon()
-                    return
-                end
-
-                -- Ataca
-                VirtualUser:CaptureController()
-                VirtualUser:Button1Down(Vector2.new(500, 500))
-                task.wait(0.01) -- Pequeno delay entre down e up
-                VirtualUser:Button1Up(Vector2.new(500, 500))
-                
-                print("[AUTO CLICK] Ataque realizado")
-            end)
-        end
-        
-        print("[AUTO CLICK] Finalizado")
-    end)
-end
-
--- Para compatibilidade com sua GUI (StartCombat também funciona)
-FarmModule.StartCombat = FarmModule.StartAutoClick
-
--- === SISTEMA DE TELEPORTE ===
+-- TELEPORTE SUAVE (SIMPLIFICADO)
 local function SmoothTween(TargetCFrame)
     local Character = Player.Character
     if not Character or not Character:FindFirstChild("HumanoidRootPart") then return false end
@@ -146,29 +41,22 @@ local function SmoothTween(TargetCFrame)
         return true
     end
     
-    local info = TweenInfo.new(Distance / 250, Enum.EasingStyle.Linear)
+    local info = TweenInfo.new(Distance / 200, Enum.EasingStyle.Linear)
     local tween = TweenService:Create(Root, info, {CFrame = TargetCFrame})
     tween:Play()
     
-    local completed = false
-    tween.Completed:Connect(function()
-        completed = true
-    end)
-    
     local startTime = tick()
-    while not completed and (tick() - startTime) < 15 do
-        if not _G.AutoFarm then
-            tween:Cancel()
-            return false
-        end
-        task.wait()
+    while tick() - startTime < 10 do
+        local currentDist = (Root.Position - TargetCFrame.p).Magnitude
+        if currentDist < 20 then break end
+        task.wait(0.1)
     end
     
     return true
 end
 
--- === VERIFICA QUEST ===
-local function HasQuest(QuestName, QuestID)
+-- VERIFICA QUEST
+local function HasQuest(QuestName)
     local PlayerGui = Player.PlayerGui
     if not PlayerGui then return false end
     
@@ -178,17 +66,36 @@ local function HasQuest(QuestName, QuestID)
     local QuestFrame = MainGui:FindFirstChild("Quest")
     if not QuestFrame then return false end
     
-    if QuestFrame.Visible then
-        local QuestText = QuestFrame:FindFirstChild("QuestName")
-        if QuestText then
-            return QuestText.Text:find(QuestName) ~= nil
+    return QuestFrame.Visible
+end
+
+-- EQUIPA ARMA (SEU CÓDIGO)
+local function EquipWeapon()
+    local char = Player.Character
+    if not char then return false end
+
+    -- Se já tem arma equipada
+    if char:FindFirstChildOfClass("Tool") then
+        return true
+    end
+
+    -- Procura pela arma selecionada
+    local weaponType = _G.Select_Weapon_Check or "Melee"
+    local checkType = weaponType == "Fruit" and "Blox Fruit" or weaponType
+    
+    for _, v in pairs(Player.Backpack:GetChildren()) do
+        if v:IsA("Tool") and v.ToolTip == checkType then
+            char.Humanoid:EquipTool(v)
+            _G.SelectWeapon = v.Name
+            task.wait(0.2)
+            return true
         end
     end
-    
+
     return false
 end
 
--- === MAGNET ===
+-- MAGNET (SEU CÓDIGO)
 local function Magnet(TargetMob)
     if not _G.BringMobs or not TargetMob or not TargetMob:FindFirstChild("HumanoidRootPart") then return end
     
@@ -207,7 +114,45 @@ local function Magnet(TargetMob)
     end)
 end
 
--- === SISTEMA PRINCIPAL DE FARM ===
+-- === AUTO CLICK (SEU CÓDIGO) ===
+function FarmModule.StartAutoClick(Toggle)
+    _G.AutoClick = Toggle
+
+    if AutoClickThread then
+        task.cancel(AutoClickThread)
+        AutoClickThread = nil
+    end
+
+    if not Toggle then return end
+
+    AutoClickThread = task.spawn(function()
+        while _G.AutoClick do
+            task.wait(_G.FastAttackDelay or 0.15)
+
+            pcall(function()
+                local char = Player.Character
+                if not char then return end
+
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                local tool = char:FindFirstChildOfClass("Tool")
+
+                if not hrp then return end
+
+                if not tool then
+                    EquipWeapon()
+                    return
+                end
+
+                VirtualUser:CaptureController()
+                VirtualUser:Button1Down(Vector2.new(500, 500))
+                task.wait(0.01)
+                VirtualUser:Button1Up(Vector2.new(500, 500))
+            end)
+        end
+    end)
+end
+
+-- === SISTEMA PRINCIPAL COM SEU CÓDIGO DE ATAQUE ===
 function FarmModule.StartFarm(Toggle, Mode)
     _G.FarmMode = Mode or "Level"
     _G.AutoFarm = Toggle
@@ -223,69 +168,119 @@ function FarmModule.StartFarm(Toggle, Mode)
     end
     
     MainFarmThread = task.spawn(function()
+        print("[FARM] Iniciando sistema de farm...")
+        
         while _G.AutoFarm do
-            task.wait(0.1)
+            task.wait(0.5)  -- Loop principal mais lento
             
             pcall(function()
-                local myLevel = Player.Data.Level.Value
-                local data = nil
-                
-                -- Busca a Quest ideal para o seu nível
-                for _, q in ipairs(QuestData["Sea 1"]) do
-                    if myLevel >= q.Level then 
-                        data = q 
-                    end
+                local character = Player.Character
+                if not character or not character:FindFirstChild("HumanoidRootPart") then
+                    task.wait(1)
+                    return
                 end
-
-                if data then
-                    -- Verifica se já está com a missão na tela
-                    local hasQuest = HasQuest(data.QuestName, data.QuestID)
+                
+                local myLevel = Player.Data.Level.Value
+                local data = QuestData["Sea 1"][1]  -- Bandit quest para teste
+                
+                if not data then return end
+                
+                -- VERIFICA SE TEM QUEST
+                local hasQuest = HasQuest(data.QuestName)
+                
+                if not hasQuest then
+                    print("[FARM] Indo pegar quest...")
                     
-                    if not hasQuest then
-                        -- Para de atacar para pegar a quest
-                        FarmModule.StartAutoClick(false)
+                    -- PARA DE ATACAR
+                    FarmModule.StartAutoClick(false)
+                    
+                    -- VAI ATÉ O NPC
+                    SmoothTween(data.NPC_Pos)
+                    
+                    -- TENTA ACEITAR QUEST
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", data.QuestName, data.QuestID)
+                    
+                    -- ESPERA QUEST APARECER
+                    for i = 1, 10 do
+                        if HasQuest(data.QuestName) then
+                            print("[FARM] ✅ Quest aceita!")
+                            break
+                        end
+                        task.wait(0.5)
+                    end
+                    
+                else
+                    -- 🔥 SEU CÓDIGO DE ATAQUE AQUI 🔥
+                    print("[FARM] Procurando Bandits...")
+                    
+                    local Enemy = nil
+                    
+                    -- PROCURA O MOB (SEU CÓDIGO)
+                    for _, v in pairs(game.Workspace.Enemies:GetChildren()) do
+                        if v.Name:find(data.Name) and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+                            Enemy = v
+                            break
+                        end
+                    end
+                    
+                    if Enemy then
+                        print("[FARM] ✅ Bandit encontrado! Atacando...")
                         
-                        -- Vai até o NPC
-                        SmoothTween(data.NPC_Pos)
+                        -- EQUIPA ARMA
+                        EquipWeapon()
                         
-                        -- Aceita a quest
-                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", data.QuestName, data.QuestID)
+                        -- ATIVA AUTO CLICK
+                        FarmModule.StartAutoClick(true)
                         
-                        task.wait(1) -- Espera a quest ser aceita
-                        
-                    else
-                        -- Procura o inimigo da missão
-                        local Enemy = game.Workspace.Enemies:FindFirstChild(data.Name)
-                        
-                        if Enemy and Enemy:FindFirstChild("HumanoidRootPart") and Enemy.Humanoid.Health > 0 then
-                            -- Equipa arma
-                            EquipWeapon()
+                        -- 🎯 SEU LOOP DE ATAQUE 🎯
+                        repeat
+                            if not Enemy or not Enemy:FindFirstChild("HumanoidRootPart") then 
+                                print("[FARM] Bandit desapareceu")
+                                break 
+                            end
                             
-                            -- Ativa auto click
-                            FarmModule.StartAutoClick(true)
-                            
-                            -- Magnet
+                            -- MAGNET
                             Magnet(Enemy)
                             
-                            -- Posicionamento: 10 studs acima do inimigo
+                            -- POSICIONAMENTO
                             Player.Character.HumanoidRootPart.CFrame = Enemy.HumanoidRootPart.CFrame * CFrame.new(0, 10, 0)
                             
-                        else
-                            -- Se o mob morreu, vai para o spawn point
-                            FarmModule.StartAutoClick(false)
-                            SmoothTween(data.Mob_Pos)
-                        end
+                            print("[FARM] Atacando Bandit | HP:", math.floor(Enemy.Humanoid.Health))
+                            
+                            task.wait(0.1)
+                            
+                        until Enemy.Humanoid.Health <= 0 or not _G.AutoFarm
+                        
+                        print("[FARM] Bandit morto!")
+                        
+                    else
+                        print("[FARM] ❌ Nenhum Bandit encontrado, indo para spawn...")
+                        
+                        FarmModule.StartAutoClick(false)
+                        
+                        -- VAI PRO SPAWN DA QUEST
+                        SmoothTween(data.Mob_Pos)
+                        task.wait(0.3)
+                        
+                        -- FORÇA POSIÇÃO (SEU CÓDIGO)
+                        Player.Character.HumanoidRootPart.CFrame = data.Mob_Pos
+                        
+                        -- ESPERA MOBS SPAWNArem
+                        task.wait(2)
                     end
                 end
             end)
         end
         
-        -- Limpeza
+        -- LIMPEZA
         FarmModule.StartAutoClick(false)
+        print("[FARM] Sistema parado")
     end)
 end
 
--- === STOP ALL ===
+-- === FUNÇÕES EXTRAS PARA COMPATIBILIDADE ===
+FarmModule.StartCombat = FarmModule.StartAutoClick
+
 function FarmModule.StopAll()
     if MainFarmThread then
         task.cancel(MainFarmThread)
