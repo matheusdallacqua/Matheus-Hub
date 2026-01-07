@@ -148,7 +148,7 @@ function VisualsModule.FruitESP(state)
                                 bill.AlwaysOnTop = true
                                 bill.Size = UDim2.new(0, 200, 0, 50)
                                 bill.Adornee = handle
-                                bill.MaxDistance = 1000
+                                bill.MaxDistance = 100000000
                                 
                                 local lab = Instance.new("TextLabel", bill)
                                 lab.Size = UDim2.new(1, 0, 1, 0)
@@ -240,7 +240,7 @@ function VisualsModule.PlayerESP(state)
                                 bill.Size = UDim2.new(0, 200, 0, 50)
                                 bill.Adornee = humanoidRootPart
                                 bill.AlwaysOnTop = true
-                                bill.MaxDistance = 500
+                                bill.MaxDistance = 500000
                                 
                                 local textLabel = Instance.new("TextLabel", bill)
                                 textLabel.Size = UDim2.new(1, 0, 1, 0)
