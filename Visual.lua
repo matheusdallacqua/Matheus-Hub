@@ -34,14 +34,14 @@ local MythicalFruits = {
 
 -- === TABELA DE RARIDADES E CORES ===
 local FruitColors = {
-    -- Comum (Branco)
+    -- (Branco)
     ["Rocket-Rocket"] = Color3.fromRGB(255, 255, 255),
     ["Spin-Spin"] = Color3.fromRGB(255, 255, 255),
     ["Blade-Blade"] = Color3.fromRGB(255, 255, 255),
     ["Spring-Spring"] = Color3.fromRGB(255, 255, 255),
     ["Bomb-Bomb"] = Color3.fromRGB(255, 255, 255),
     
-    -- Incomum (Azul Claro)
+    -- (Azul Claro)
     ["Smoke-Smoke"] = Color3.fromRGB(100, 200, 255),
     ["Spike-Spike"] = Color3.fromRGB(100, 200, 255),
     ["Flame-Flame"] = Color3.fromRGB(255, 100, 100),
@@ -53,11 +53,11 @@ local FruitColors = {
     ["Light-Light"] = Color3.fromRGB(255, 255, 150),
     ["Rubber-Rubber"] = Color3.fromRGB(100, 200, 255),
     
-    -- Raro (Roxo)
+    -- (Roxo)
     ["Ghost-Ghost"] = Color3.fromRGB(150, 0, 255),
     ["Magma-Magma"] = Color3.fromRGB(255, 100, 0),
     ["Quake-Quake"] = Color3.fromRGB(150, 0, 255),
-    ["Buddha-Buddha"] = Color3.fromRGB(255, 215, 0), -- Buda é especial (quase mítico)
+    ["Buddha-Buddha"] = Color3.fromRGB(255, 215, 0),
     ["Love-Love"] = Color3.fromRGB(255, 100, 200),
     ["Creation-Creation"] = Color3.fromRGB(150, 0, 255),
     ["Spider-Spider"] = Color3.fromRGB(150, 0, 255),
@@ -67,7 +67,7 @@ local FruitColors = {
     ["Lightining-Lightning"] = Color3.fromRGB(255, 255, 100),
     ["Blizzard-Blizzard"] = Color3.fromRGB(100, 200, 255),
     
-    -- Mítico (Dourado)
+    -- (Dourado)
     ["Gravity-Gravity"] = Color3.fromRGB(255, 215, 0),
     ["Mammoth-Mammoth"] = Color3.fromRGB(255, 215, 0),
     ["T-Rex-T-Rex"] = Color3.fromRGB(255, 215, 0),
